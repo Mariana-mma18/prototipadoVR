@@ -6,8 +6,11 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
-    guid: 99c9720ab356a0642a771bea13969a05
+    path: Assets/Desarrollo/Scenes/RESTAURANTE.unity
+    guid: 2a0c22925fc4a1546a3f1b5bb99543dd
+  - enabled: 1
+    path: Assets/Desarrollo/Scenes/TERRENO FINAL.unity
+    guid: f151fbd138c98564f859cd2422c57d55
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 93df6db14f607f54ab33ae001111bc3e, type: 2}
