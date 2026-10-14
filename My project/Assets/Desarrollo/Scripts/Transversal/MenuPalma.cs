@@ -43,11 +43,14 @@ public class MenuPalma : MonoBehaviour
     [Tooltip("Separación del ícono desde la palma hacia la cara, en metros")]
     public float alturaIcono = 0.04f;
 
-    [Tooltip("Cuánto más arriba de la palma aparece el panel, en metros")]
-    public float alturaPanel = 0.14f;
+    [Tooltip("Distancia del panel frente a los ojos al abrirse, en metros. El panel queda fijo ahí para poder tocarlo.")]
+    public float distanciaPanel = 0.45f;
 
-    [Tooltip("Qué tan rápido sigue el panel a la mano")]
-    public float suavizado = 12f;
+    [Tooltip("Cuánto más abajo de los ojos aparece el panel, en metros")]
+    public float bajoLosOjos = 0.2f;
+
+    [Tooltip("Si el jugador se aleja más que esto del panel (por ejemplo al teletransportarse), el menú se cierra solo")]
+    public float distanciaCierre = 1.5f;
 
     [Header("Botones")]
     public UnityEvent alPresionarMapa;
@@ -115,11 +118,13 @@ public class MenuPalma : MonoBehaviour
         }
 
         if (!Abierto && !esperarQueBajeLaMano && tiempoMirando >= tiempoParaAbrir)
-            Abrir(lectura.palma + Vector3.up * alturaPanel);
+            AbrirFrenteAlJugador();
 
-        // Mientras mira la palma el panel la sigue; si baja la mano, el panel se queda donde está para poder tocarlo
-        if (Abierto && mirando)
-            Ubicar(lectura.palma + Vector3.up * alturaPanel, Time.deltaTime * suavizado);
+        // El panel queda fijo donde se abrió (si se moviera, el poke de los dedos no alcanza a registrar la pulsación).
+        // Si el jugador se aleja, se cierra solo.
+        if (Abierto && !cerrarPendiente
+            && Vector3.Distance(panel.position, camaraRig.centerEyeAnchor.position) > distanciaCierre)
+            Cerrar();
 
         // Gesto de menú de Meta (palma izquierda + pellizco) o botón de menú del control izquierdo
         if (OVRInput.GetDown(OVRInput.Button.Start))
@@ -142,8 +147,9 @@ public class MenuPalma : MonoBehaviour
     {
         if (!BuscarReferencias()) return;
         Transform ojos = camaraRig.centerEyeAnchor;
-        Vector3 frente = Vector3.ProjectOnPlane(ojos.forward, Vector3.up).normalized;
-        Abrir(ojos.position + frente * 0.45f + Vector3.down * 0.15f);
+        Vector3 frente = Vector3.ProjectOnPlane(ojos.forward, Vector3.up);
+        if (frente.sqrMagnitude < 0.0001f) frente = camaraRig.transform.forward;
+        Abrir(ojos.position + frente.normalized * distanciaPanel + Vector3.down * bajoLosOjos);
     }
 
     [ContextMenu("Probar: cerrar")]
@@ -172,14 +178,11 @@ public class MenuPalma : MonoBehaviour
         Abierto = true;
         cerrarPendiente = false;
         icono.gameObject.SetActive(false);
-        Ubicar(posicion, 1f);
-        panel.gameObject.SetActive(true);
-    }
 
-    void Ubicar(Vector3 posicion, float t)
-    {
-        panel.position = Vector3.Lerp(panel.position, posicion, t);
-        panel.rotation = Quaternion.Slerp(panel.rotation, MirandoAlJugador(posicion), t);
+        // Vertical (solo gira hacia el jugador en horizontal), como un cartel frente a él
+        Vector3 haciaPanel = Vector3.ProjectOnPlane(posicion - camaraRig.centerEyeAnchor.position, Vector3.up);
+        panel.SetPositionAndRotation(posicion, Quaternion.LookRotation(haciaPanel));
+        panel.gameObject.SetActive(true);
     }
 
     // El canvas se lee mirando en la misma dirección que su eje Z
