@@ -120,8 +120,8 @@ public class MenuPalma : MonoBehaviour
         if (!Abierto && !esperarQueBajeLaMano && tiempoMirando >= tiempoParaAbrir)
             AbrirFrenteAlJugador();
 
-        // El panel queda fijo donde se abrió (si se moviera, el poke de los dedos no alcanza a registrar la pulsación).
-        // Si el jugador se aleja, se cierra solo.
+        // El panel no sigue a la mano (si se moviera, el poke de los dedos no alcanza a registrar la pulsación).
+        // Si el jugador se aleja caminando, se cierra solo.
         if (Abierto && !cerrarPendiente
             && Vector3.Distance(panel.position, camaraRig.centerEyeAnchor.position) > distanciaCierre)
             Cerrar();
@@ -140,6 +140,7 @@ public class MenuPalma : MonoBehaviour
         if (!cerrarPendiente) return;
         cerrarPendiente = false;
         panel.gameObject.SetActive(false);
+        panel.SetParent(transform, true);
     }
 
     [ContextMenu("Probar: abrir frente al jugador")]
@@ -179,8 +180,10 @@ public class MenuPalma : MonoBehaviour
         cerrarPendiente = false;
         icono.gameObject.SetActive(false);
 
-        // Vertical (solo gira hacia el jugador en horizontal), como un cartel frente a él
+        // Vertical (solo gira hacia el jugador en horizontal), como un cartel frente a él.
+        // Hijo del rig: viaja con el jugador en el bote o al teletransportarse, y queda quieto para el poke
         Vector3 haciaPanel = Vector3.ProjectOnPlane(posicion - camaraRig.centerEyeAnchor.position, Vector3.up);
+        panel.SetParent(camaraRig.transform, true);
         panel.SetPositionAndRotation(posicion, Quaternion.LookRotation(haciaPanel));
         panel.gameObject.SetActive(true);
     }
