@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Events;
 
 // Sube al jugador al bote al presionar el poke del muelle.
 // Apaga la locomoción y deja al jugador fijo en el asiento; solo puede mirar alrededor con la cabeza.
@@ -13,22 +14,33 @@ public class SubirAlBote : MonoBehaviour
     [Tooltip("Objetos de locomoción que se apagan al subir (Locomotor y grupos de teleport/desplazamiento de manos y controles)")]
     public GameObject[] locomocion;
 
+    [Tooltip("Se llama cuando el jugador ya quedó sentado en el bote (por ejemplo, para zarpar)")]
+    public UnityEvent alSubir;
+
     public bool EnBote { get; private set; }
 
     float giroRelativo;
     Vector3 desfaseCabeza;
 
+    // Cápsula del locomotor de Meta; hay que moverla junto con el jugador al bajarse
+    Oculus.Interaction.Locomotion.CharacterController personaje;
+    float alturaPersonaje;
+
+    [ContextMenu("Probar: subir al bote")]
     public void Subir()
     {
         // El poke y el botón del canvas pueden llamar los dos a la vez
         if (EnBote) return;
         EnBote = true;
 
-        foreach (var obj in locomocion)
-            if (obj) obj.SetActive(false);
-
         Transform rig = camaraRig.transform;
         Transform ojos = camaraRig.centerEyeAnchor;
+
+        personaje = camaraRig.GetComponentInChildren<Oculus.Interaction.Locomotion.CharacterController>(true);
+        if (personaje) alturaPersonaje = personaje.Pose.position.y - rig.position.y;
+
+        foreach (var obj in locomocion)
+            if (obj) obj.SetActive(false);
 
         // Giro el rig para que el jugador quede mirando hacia la proa
         rig.Rotate(0f, Mathf.DeltaAngle(ojos.eulerAngles.y, asiento.eulerAngles.y), 0f, Space.World);
@@ -38,6 +50,27 @@ public class SubirAlBote : MonoBehaviour
         desfaseCabeza = Quaternion.Inverse(rig.rotation) * Vector3.ProjectOnPlane(ojos.position - rig.position, Vector3.up);
 
         SeguirAsiento();
+        alSubir.Invoke();
+    }
+
+    // Deja al jugador parado en el destino, mirando hacia su eje Z, y le devuelve la locomoción
+    public void Bajar(Transform destino)
+    {
+        if (!EnBote) return;
+        EnBote = false;
+
+        Transform rig = camaraRig.transform;
+        Transform ojos = camaraRig.centerEyeAnchor;
+
+        rig.Rotate(0f, Mathf.DeltaAngle(ojos.eulerAngles.y, destino.eulerAngles.y), 0f, Space.World);
+        rig.position = destino.position - Vector3.ProjectOnPlane(ojos.position - rig.position, Vector3.up);
+
+        // Llevo la cápsula bajo la cabeza antes de encender el locomotor; si no, arrastra al jugador al muelle anterior
+        if (personaje)
+            personaje.SetPosition(new Vector3(destino.position.x, destino.position.y + alturaPersonaje, destino.position.z));
+
+        foreach (var obj in locomocion)
+            if (obj) obj.SetActive(true);
     }
 
     void LateUpdate()
