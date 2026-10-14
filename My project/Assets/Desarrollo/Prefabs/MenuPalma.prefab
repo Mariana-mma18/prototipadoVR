@@ -1000,12 +1000,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MenuPalma
   camaraRig: {fileID: 0}
-  mano: {fileID: 0}
+  manoIzquierda: {fileID: 0}
+  manoDerecha: {fileID: 0}
+  usarManoDerecha: 1
   icono: {fileID: 1915412845666231969}
   panel: {fileID: 3740740801231870741}
   anguloPalma: 50
-  anguloVista: 35
-  tiempoParaAbrir: 0.5
+  anguloVista: 50
+  tiempoParaAbrir: 0.3
   alturaIcono: 0.04
   alturaPanel: 0.14
   suavizado: 12
@@ -1015,6 +1017,9 @@ MonoBehaviour:
   alPresionarMenu:
     m_PersistentCalls:
       m_Calls: []
+  textoDepuracion: 0
+  lecturaIzquierda: 
+  lecturaDerecha: 
 --- !u!1 &5731980225359245339
 GameObject:
   m_ObjectHideFlags: 0
@@ -1315,7 +1320,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Meta.XR.BuildingBlocks::Meta.XR.BuildingBlocks.BuildingBlock
   blockId: 5838e892-31a4-4f65-a415-dc108aefa14c
-  instanceId: acabe909-3fd2-44ad-970b-e7549180627e
+  instanceId: c18ac751-a134-404c-873a-1d39a64628a0
   version: 1
   installationRoutineCheckpoint:
     _installationRoutineId: c88fc9f2-e9d1-41ea-b937-cdaf92a806d0

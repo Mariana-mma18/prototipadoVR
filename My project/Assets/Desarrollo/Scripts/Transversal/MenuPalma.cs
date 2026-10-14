@@ -1,18 +1,26 @@
 using Oculus.Interaction.Input;
 using Oculus.Interaction.PoseDetection;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 
 // Menú de la palma (elemento transversal, va en todas las escenas).
-// Al girar la mano y mirar la palma aparece un ícono sobre ella; si la sigue mirando se abre el menú (Mapa / Menú).
-// El menú se cierra con la X. Con controles se abre y cierra con el botón de menú del control izquierdo.
+// Al abrir la mano con la palma volteada hacia la cara aparece un ícono sobre ella; si se mantiene, se abre el menú (Mapa / Menú).
+// El menú se cierra con la X. También se abre y cierra con el gesto de menú de Meta (mirar la palma izquierda y pellizcar)
+// o con el botón de menú del control izquierdo.
 public class MenuPalma : MonoBehaviour
 {
     [Header("Referencias (vacías = se buscan solas en el Camera Rig)")]
     public OVRCameraRig camaraRig;
 
-    [Tooltip("Mano que abre el menú. Por defecto la izquierda (ComprehensiveInteractorsLeft)")]
-    public Hand mano;
+    [Tooltip("Mano izquierda (ComprehensiveInteractorsLeft)")]
+    public Hand manoIzquierda;
+
+    [Tooltip("Mano derecha (ComprehensiveInteractorsRight)")]
+    public Hand manoDerecha;
+
+    [Tooltip("Permite abrir el menú también con la palma derecha")]
+    public bool usarManoDerecha = true;
 
     [Header("Partes del menú")]
     [Tooltip("Ícono que flota sobre la palma")]
@@ -22,14 +30,14 @@ public class MenuPalma : MonoBehaviour
     public Transform panel;
 
     [Header("Gesto")]
-    [Tooltip("Ángulo máximo entre la palma y la mirada para considerar que el jugador mira su palma")]
+    [Tooltip("Qué tan de frente debe estar la palma hacia los ojos, en grados (0 = totalmente de frente)")]
     public float anguloPalma = 50f;
 
-    [Tooltip("Qué tan centrada debe estar la mano en la vista, en grados")]
-    public float anguloVista = 35f;
+    [Tooltip("Qué tan lejos del centro de la vista puede estar la mano, en grados (las gafas ven unos 50° hacia cada lado)")]
+    public float anguloVista = 50f;
 
-    [Tooltip("Segundos mirando la palma antes de abrir el menú")]
-    public float tiempoParaAbrir = 0.5f;
+    [Tooltip("Segundos con la palma volteada antes de abrir el menú")]
+    public float tiempoParaAbrir = 0.3f;
 
     [Header("Ubicación")]
     [Tooltip("Separación del ícono desde la palma hacia la cara, en metros")]
@@ -45,22 +53,29 @@ public class MenuPalma : MonoBehaviour
     public UnityEvent alPresionarMapa;
     public UnityEvent alPresionarMenu;
 
-    [Header("Depuración (se actualiza en Play, solo para mirar)")]
-    [Tooltip("La mano tiene tracking válido")]
-    public bool manoDetectada;
+    [Header("Depuración")]
+    [Tooltip("Muestra frente a los ojos los ángulos en vivo, para afinar el gesto con las gafas puestas")]
+    public bool textoDepuracion;
 
-    [Tooltip("Ángulo actual entre la palma y la mirada; tiene que bajar de 'anguloPalma' para abrir")]
-    public float anguloPalmaActual;
-
-    [Tooltip("Qué tan lejos del centro de la vista está la mano; tiene que bajar de 'anguloVista' para abrir")]
-    public float anguloVistaActual;
+    [Tooltip("Solo para mirar en Play: ángulos actuales de cada mano (palma / vista). 'sin tracking' si no se ve la mano.")]
+    public string lecturaIzquierda;
+    public string lecturaDerecha;
 
     public bool Abierto { get; private set; }
 
+    struct Lectura
+    {
+        public bool detectada, mirando;
+        public float anguloPalma, anguloVista;
+        public Vector3 palma, haciaCara;
+    }
+
     readonly TransformJointData datosMano = new TransformJointData();
+    Hand manoActiva;
     float tiempoMirando;
     bool esperarQueBajeLaMano;
     bool cerrarPendiente;
+    TextMeshPro texto;
 
     void Start()
     {
@@ -72,27 +87,41 @@ public class MenuPalma : MonoBehaviour
     {
         if (!BuscarReferencias()) return;
 
-        bool mirando = MirandoPalma(out Vector3 palma, out Vector3 haciaCara);
+        Lectura izquierda = Leer(manoIzquierda);
+        Lectura derecha = usarManoDerecha ? Leer(manoDerecha) : default;
+        lecturaIzquierda = Describir(izquierda);
+        lecturaDerecha = usarManoDerecha ? Describir(derecha) : "desactivada";
+        MostrarDepuracion();
+
+        // Con el menú abierto solo cuenta la mano que lo abrió; si no, la primera que voltee la palma
+        Lectura lectura = default;
+        if (Abierto || tiempoMirando > 0f)
+            lectura = manoActiva == manoDerecha ? derecha : izquierda;
+        else if (izquierda.mirando) { manoActiva = manoIzquierda; lectura = izquierda; }
+        else if (derecha.mirando) { manoActiva = manoDerecha; lectura = derecha; }
+
+        bool mirando = lectura.mirando;
         tiempoMirando = mirando ? tiempoMirando + Time.deltaTime : 0f;
 
         // Después de cerrar, no se vuelve a abrir hasta que baje la mano
-        if (!mirando) esperarQueBajeLaMano = false;
+        if (!izquierda.mirando && !derecha.mirando) esperarQueBajeLaMano = false;
 
         bool mostrarIcono = mirando && !Abierto && !esperarQueBajeLaMano;
         if (icono.gameObject.activeSelf != mostrarIcono) icono.gameObject.SetActive(mostrarIcono);
         if (mostrarIcono)
         {
-            icono.position = palma + haciaCara * alturaIcono;
+            icono.position = lectura.palma + lectura.haciaCara * alturaIcono;
             icono.rotation = MirandoAlJugador(icono.position);
         }
 
         if (!Abierto && !esperarQueBajeLaMano && tiempoMirando >= tiempoParaAbrir)
-            Abrir(palma + Vector3.up * alturaPanel);
+            Abrir(lectura.palma + Vector3.up * alturaPanel);
 
         // Mientras mira la palma el panel la sigue; si baja la mano, el panel se queda donde está para poder tocarlo
         if (Abierto && mirando)
-            Ubicar(palma + Vector3.up * alturaPanel, Time.deltaTime * suavizado);
+            Ubicar(lectura.palma + Vector3.up * alturaPanel, Time.deltaTime * suavizado);
 
+        // Gesto de menú de Meta (palma izquierda + pellizco) o botón de menú del control izquierdo
         if (OVRInput.GetDown(OVRInput.Button.Start))
         {
             if (Abierto) Cerrar();
@@ -160,14 +189,16 @@ public class MenuPalma : MonoBehaviour
         return direccion.sqrMagnitude > 0.0001f ? Quaternion.LookRotation(direccion) : Quaternion.identity;
     }
 
-    bool MirandoPalma(out Vector3 palma, out Vector3 haciaCara)
+    Lectura Leer(Hand mano)
     {
-        palma = haciaCara = Vector3.zero;
+        var lectura = new Lectura();
+        if (!mano) return lectura;
+
         Pose muneca = default, centroPalma = default;
-        manoDetectada = mano.IsTrackedDataValid
+        lectura.detectada = mano.IsTrackedDataValid
             && mano.GetJointPose(HandJointId.HandWristRoot, out muneca)
             && mano.GetJointPose(HandJointId.HandPalm, out centroPalma);
-        if (!manoDetectada) return false;
+        if (!lectura.detectada) return lectura;
 
         Transform ojos = camaraRig.centerEyeAnchor;
         datosMano.IsValid = true;
@@ -177,16 +208,52 @@ public class MenuPalma : MonoBehaviour
         datosMano.TrackingSystemUp = camaraRig.trackingSpace.up;
         datosMano.TrackingSystemForward = camaraRig.trackingSpace.forward;
 
-        // Mismo cálculo que el gesto "PalmTowardsFace" del SDK de Meta: el dorso de la mano apunta hacia donde mira el jugador
-        Vector3 dorso = TransformFeatureValueProvider.GetHandVectorForFeature(TransformFeature.PalmTowardsFace, datosMano);
-        palma = centroPalma.position;
-        haciaCara = -dorso.normalized;
+        // Dirección del dorso de la mano según el SDK de Meta (la misma que usa su gesto "PalmTowardsFace")
+        Vector3 dorso = TransformFeatureValueProvider.GetHandVectorForFeature(TransformFeature.PalmTowardsFace, datosMano).normalized;
+        lectura.palma = centroPalma.position;
+        lectura.haciaCara = -dorso;
 
-        // Margen extra una vez detectado, para que no parpadee en el borde
-        float margen = tiempoMirando > 0f ? 10f : 0f;
-        anguloPalmaActual = Vector3.Angle(dorso, ojos.forward);
-        anguloVistaActual = Vector3.Angle(ojos.forward, palma - ojos.position);
-        return anguloPalmaActual < anguloPalma + margen && anguloVistaActual < anguloVista + margen;
+        // Se mide contra la dirección palma → ojos, no contra hacia dónde apunta la cabeza:
+        // así funciona aunque el jugador mire la mano bajando los ojos sin mover la cabeza
+        Vector3 haciaOjos = ojos.position - lectura.palma;
+        lectura.anguloPalma = Vector3.Angle(lectura.haciaCara, haciaOjos);
+        lectura.anguloVista = Vector3.Angle(ojos.forward, -haciaOjos);
+
+        // Margen extra para la mano que ya está abriendo el menú, para que no parpadee en el borde
+        float margen = mano == manoActiva && (Abierto || tiempoMirando > 0f) ? 10f : 0f;
+        lectura.mirando = lectura.anguloPalma < anguloPalma + margen && lectura.anguloVista < anguloVista + margen;
+        return lectura;
+    }
+
+    static string Describir(Lectura lectura)
+    {
+        if (!lectura.detectada) return "sin tracking";
+        return $"palma {lectura.anguloPalma:F0}° / vista {lectura.anguloVista:F0}°" + (lectura.mirando ? "  ✓" : "");
+    }
+
+    void MostrarDepuracion()
+    {
+        if (!textoDepuracion)
+        {
+            if (texto) texto.gameObject.SetActive(false);
+            return;
+        }
+
+        if (!texto)
+        {
+            texto = new GameObject("Texto depuración palma").AddComponent<TextMeshPro>();
+            texto.transform.SetParent(transform, false);
+            texto.fontSize = 0.25f;
+            texto.alignment = TextAlignmentOptions.Center;
+            texto.textWrappingMode = TextWrappingModes.NoWrap;
+            texto.overflowMode = TextOverflowModes.Overflow;
+            texto.rectTransform.sizeDelta = new Vector2(1f, 0.25f);
+        }
+        texto.gameObject.SetActive(true);
+
+        Transform ojos = camaraRig.centerEyeAnchor;
+        texto.transform.SetPositionAndRotation(ojos.position + ojos.forward * 0.6f - ojos.up * 0.18f, Quaternion.LookRotation(ojos.forward, ojos.up));
+        texto.text = $"Izq: {lecturaIzquierda}\nDer: {lecturaDerecha}\nAbrir si palma < {anguloPalma:F0}° y vista < {anguloVista:F0}°";
     }
 
     bool BuscarReferencias()
@@ -194,11 +261,14 @@ public class MenuPalma : MonoBehaviour
         if (!camaraRig) camaraRig = FindFirstObjectByType<OVRCameraRig>();
         if (!camaraRig || !camaraRig.centerEyeAnchor) return false;
 
-        if (!mano)
+        if (!manoIzquierda || (usarManoDerecha && !manoDerecha))
         {
             foreach (var t in camaraRig.GetComponentsInChildren<Transform>(true))
-                if (t.name == "ComprehensiveInteractorsLeft") mano = t.GetComponent<Hand>();
+            {
+                if (!manoIzquierda && t.name == "ComprehensiveInteractorsLeft") manoIzquierda = t.GetComponent<Hand>();
+                if (!manoDerecha && t.name == "ComprehensiveInteractorsRight") manoDerecha = t.GetComponent<Hand>();
+            }
         }
-        return mano;
+        return manoIzquierda;
     }
 }
