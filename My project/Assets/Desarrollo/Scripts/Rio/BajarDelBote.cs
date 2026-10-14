@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Events;
 
 // Poke para bajarse del bote. Aparece frente al jugador cuando el bote llega al muelle
 // y al presionarlo lo deja parado en el muelle con la locomoción encendida.
@@ -18,6 +19,9 @@ public class BajarDelBote : MonoBehaviour
 
     [Tooltip("Cuánto más abajo de los ojos aparece el botón, en metros")]
     public float bajoLosOjos = 0.35f;
+
+    [Tooltip("Se llama cuando el jugador ya quedó en el muelle (por ejemplo, para mostrar el poke de subir de este muelle)")]
+    public UnityEvent alBajar;
 
     bool ocultar;
 
@@ -45,6 +49,7 @@ public class BajarDelBote : MonoBehaviour
 
         jugador.Bajar(destino);
         ocultar = true;
+        alBajar.Invoke();
     }
 
     void LateUpdate()

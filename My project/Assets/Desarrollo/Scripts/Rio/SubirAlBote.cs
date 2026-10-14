@@ -17,7 +17,12 @@ public class SubirAlBote : MonoBehaviour
     [Tooltip("Se llama cuando el jugador ya quedó sentado en el bote (por ejemplo, para zarpar)")]
     public UnityEvent alSubir;
 
+    [Tooltip("Parte visible del poke que se oculta al subir (el building block). No puede ser este mismo objeto, porque este script sigue moviendo al jugador.")]
+    public GameObject ocultarAlSubir;
+
     public bool EnBote { get; private set; }
+
+    bool ocultarPendiente;
 
     float giroRelativo;
     Vector3 desfaseCabeza;
@@ -50,6 +55,7 @@ public class SubirAlBote : MonoBehaviour
         desfaseCabeza = Quaternion.Inverse(rig.rotation) * Vector3.ProjectOnPlane(ojos.position - rig.position, Vector3.up);
 
         SeguirAsiento();
+        ocultarPendiente = ocultarAlSubir;
         alSubir.Invoke();
     }
 
@@ -75,6 +81,13 @@ public class SubirAlBote : MonoBehaviour
 
     void LateUpdate()
     {
+        // Oculto el poke después de que termine de procesar la pulsación
+        if (ocultarPendiente)
+        {
+            ocultarPendiente = false;
+            ocultarAlSubir.SetActive(false);
+        }
+
         // Sigo al asiento cada frame para que el jugador viaje con el bote cuando navegue
         if (EnBote) SeguirAsiento();
     }
