@@ -1608,15 +1608,15 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 377408422}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0.62387955, z: 0, w: 0.78152055}
-  m_LocalPosition: {x: -6.11, y: 0.64, z: 9.79}
+  m_LocalRotation: {x: -0, y: -0.76702005, z: -0, w: 0.6416232}
+  m_LocalPosition: {x: -6.1099854, y: -0.6000004, z: 9.790001}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 777434815}
   - {fileID: 1734462946}
   m_Father: {fileID: 409328907}
-  m_LocalEulerAnglesHint: {x: 0, y: -77.2, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -100.174, z: 0}
 --- !u!1 &380450359
 GameObject:
   m_ObjectHideFlags: 0
@@ -2190,7 +2190,7 @@ Transform:
   m_GameObject: {fileID: 463123356}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: -0.7071068}
-  m_LocalPosition: {x: 397.79666, y: 13.767, z: 84.96315}
+  m_LocalPosition: {x: 397.79666, y: 13.75, z: 84.96315}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3627,7 +3627,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -24.8304, y: -11.98, z: 25.6175}
-  m_LocalScale: {x: 3.2577503, y: 3.3041275, z: 5.6754303}
+  m_LocalScale: {x: 2.4388578, y: 3.3041275, z: 5.1307592}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1907536853}
@@ -11223,6 +11223,18 @@ PrefabInstance:
     - target: {fileID: 60818267847753836, guid: e4b9ee1e00b945a49886750646c183ab, type: 3}
       propertyPath: m_AdditionalShaderChannelsFlag
       value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 62567601858161731, guid: e4b9ee1e00b945a49886750646c183ab, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4294967295
+      objectReference: {fileID: 0}
+    - target: {fileID: 2436767082135474842, guid: e4b9ee1e00b945a49886750646c183ab, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4280690214
+      objectReference: {fileID: 0}
+    - target: {fileID: 2436767082135474842, guid: e4b9ee1e00b945a49886750646c183ab, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
       objectReference: {fileID: 0}
     - target: {fileID: 5610861561166619877, guid: e4b9ee1e00b945a49886750646c183ab, type: 3}
       propertyPath: m_Name
