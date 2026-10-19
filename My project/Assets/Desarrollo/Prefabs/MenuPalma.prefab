@@ -1007,7 +1007,7 @@ MonoBehaviour:
   panel: {fileID: 3740740801231870741}
   anguloPalma: 50
   anguloVista: 50
-  tiempoParaAbrir: 0.3
+  tiempoParaAbrir: 1
   alturaIcono: 0.04
   distanciaPanel: 0.5
   bajoLosOjos: 0.2

@@ -3,9 +3,11 @@ using Oculus.Interaction.PoseDetection;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
 // Menú de la palma (elemento transversal, va en todas las escenas).
-// Al abrir la mano con la palma volteada hacia la cara aparece un ícono sobre ella; si se mantiene, se abre el menú (Mapa / Menú).
+// Al abrir la mano con la palma volteada hacia la cara aparece un ícono sobre ella que se va llenando como un reloj;
+// si se mantiene hasta que se llena, se abre el menú (Mapa / Menú). Así no se abre sin querer al voltear la mano.
 // El menú se cierra con la X. También se abre y cierra con el gesto de menú de Meta (mirar la palma izquierda y pellizcar)
 // o con el botón de menú del control izquierdo.
 public class MenuPalma : MonoBehaviour
@@ -29,6 +31,12 @@ public class MenuPalma : MonoBehaviour
     [Tooltip("Panel con los botones Mapa, Menú y X. Su eje Z debe apuntar hacia donde se lee.")]
     public Transform panel;
 
+    [Tooltip("Imagen del ícono que se llena mientras se sostiene la palma. Vacío = se crea sola copiando el círculo del ícono.")]
+    public Image progresoIcono;
+
+    [Tooltip("Transparencia del círculo del ícono mientras todavía no se ha llenado")]
+    [Range(0f, 1f)] public float transparenciaFondoIcono = 0.3f;
+
     [Header("Gesto")]
     [Tooltip("Qué tan de frente debe estar la palma hacia los ojos, en grados (0 = totalmente de frente)")]
     public float anguloPalma = 50f;
@@ -36,8 +44,8 @@ public class MenuPalma : MonoBehaviour
     [Tooltip("Qué tan lejos del centro de la vista puede estar la mano, en grados (las gafas ven unos 50° hacia cada lado)")]
     public float anguloVista = 50f;
 
-    [Tooltip("Segundos con la palma volteada antes de abrir el menú")]
-    public float tiempoParaAbrir = 0.3f;
+    [Tooltip("Segundos sosteniendo la palma volteada antes de abrir el menú (el ícono se llena en ese tiempo)")]
+    public float tiempoParaAbrir = 1f;
 
     [Header("Ubicación")]
     [Tooltip("Separación del ícono desde la palma hacia la cara, en metros")]
@@ -82,6 +90,7 @@ public class MenuPalma : MonoBehaviour
 
     void Start()
     {
+        PrepararProgreso();
         icono.gameObject.SetActive(false);
         panel.gameObject.SetActive(false);
     }
@@ -115,6 +124,7 @@ public class MenuPalma : MonoBehaviour
         {
             icono.position = lectura.palma + lectura.haciaCara * alturaIcono;
             icono.rotation = MirandoAlJugador(icono.position);
+            if (progresoIcono) progresoIcono.fillAmount = tiempoParaAbrir > 0f ? Mathf.Clamp01(tiempoMirando / tiempoParaAbrir) : 1f;
         }
 
         if (!Abierto && !esperarQueBajeLaMano && tiempoMirando >= tiempoParaAbrir)
@@ -186,6 +196,28 @@ public class MenuPalma : MonoBehaviour
         panel.SetParent(camaraRig.transform, true);
         panel.SetPositionAndRotation(posicion, Quaternion.LookRotation(haciaPanel));
         panel.gameObject.SetActive(true);
+    }
+
+    // Copia el círculo del ícono como relleno radial encima de él; el original queda tenue como fondo
+    void PrepararProgreso()
+    {
+        if (!progresoIcono)
+        {
+            Image circulo = icono.GetComponentInChildren<Image>(true);
+            if (!circulo) return;
+            progresoIcono = Instantiate(circulo, circulo.transform.parent);
+            progresoIcono.name = "Progreso";
+            progresoIcono.transform.SetSiblingIndex(circulo.transform.GetSiblingIndex() + 1);
+
+            Color fondo = circulo.color;
+            fondo.a *= transparenciaFondoIcono;
+            circulo.color = fondo;
+        }
+        progresoIcono.type = Image.Type.Filled;
+        progresoIcono.fillMethod = Image.FillMethod.Radial360;
+        progresoIcono.fillOrigin = (int)Image.Origin360.Top;
+        progresoIcono.fillClockwise = true;
+        progresoIcono.fillAmount = 0f;
     }
 
     // El canvas se lee mirando en la misma dirección que su eje Z
