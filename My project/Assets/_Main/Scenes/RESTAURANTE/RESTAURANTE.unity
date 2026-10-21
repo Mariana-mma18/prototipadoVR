@@ -568,6 +568,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -6093592463355912122, guid: 582c2bde200bf2e4590a60d6ea0070a8, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 151c30c9534bd7f4ea5bd9e2292ff93f, type: 2}
+    - target: {fileID: -6093592463355912122, guid: 582c2bde200bf2e4590a60d6ea0070a8, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 151c30c9534bd7f4ea5bd9e2292ff93f, type: 2}
+    - target: {fileID: -6093592463355912122, guid: 582c2bde200bf2e4590a60d6ea0070a8, type: 3}
+      propertyPath: 'm_Materials.Array.data[2]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 151c30c9534bd7f4ea5bd9e2292ff93f, type: 2}
+    - target: {fileID: -6093592463355912122, guid: 582c2bde200bf2e4590a60d6ea0070a8, type: 3}
+      propertyPath: 'm_Materials.Array.data[3]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 151c30c9534bd7f4ea5bd9e2292ff93f, type: 2}
     - target: {fileID: 919132149155446097, guid: 582c2bde200bf2e4590a60d6ea0070a8, type: 3}
       propertyPath: m_Name
       value: mesa_comedor2
@@ -767,31 +783,31 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 4de980732cba06d4db2d5d8bb81d6237, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 373.025
+      value: 383.8866
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 4de980732cba06d4db2d5d8bb81d6237, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.666
+      value: -0.643
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 4de980732cba06d4db2d5d8bb81d6237, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 120.3017
+      value: 116.488785
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 4de980732cba06d4db2d5d8bb81d6237, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.93535155
+      value: 0.7814338
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 4de980732cba06d4db2d5d8bb81d6237, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0.19439568
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 4de980732cba06d4db2d5d8bb81d6237, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0.5140461
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 4de980732cba06d4db2d5d8bb81d6237, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.35371938
+      value: 0.29551318
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 4de980732cba06d4db2d5d8bb81d6237, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -799,7 +815,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 4de980732cba06d4db2d5d8bb81d6237, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
+      value: 66.676
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 4de980732cba06d4db2d5d8bb81d6237, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
@@ -1068,6 +1084,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -6093592463355912122, guid: 582c2bde200bf2e4590a60d6ea0070a8, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 9cb9d407a9b99014a96fc97b223bce5a, type: 2}
     - target: {fileID: 919132149155446097, guid: 582c2bde200bf2e4590a60d6ea0070a8, type: 3}
       propertyPath: m_Name
       value: mesa_comedor2 (1)
@@ -1147,6 +1167,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -6093592463355912122, guid: 582c2bde200bf2e4590a60d6ea0070a8, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 9cb9d407a9b99014a96fc97b223bce5a, type: 2}
     - target: {fileID: 919132149155446097, guid: 582c2bde200bf2e4590a60d6ea0070a8, type: 3}
       propertyPath: m_Name
       value: mesa_comedor2 (2)
