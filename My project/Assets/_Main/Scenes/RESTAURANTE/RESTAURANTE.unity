@@ -708,11 +708,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 4de980732cba06d4db2d5d8bb81d6237, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.697
+      value: -0.666
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 4de980732cba06d4db2d5d8bb81d6237, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 122.43
+      value: 122.325
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 4de980732cba06d4db2d5d8bb81d6237, type: 3}
       propertyPath: m_LocalRotation.w
@@ -742,6 +742,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 41.43
       objectReference: {fileID: 0}
+    - target: {fileID: 113847369894216419, guid: 4de980732cba06d4db2d5d8bb81d6237, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 8a29fb4acb31e8d4986c2d92aea969c7, type: 2}
     - target: {fileID: 919132149155446097, guid: 4de980732cba06d4db2d5d8bb81d6237, type: 3}
       propertyPath: m_Name
       value: muslo_de_pollo
