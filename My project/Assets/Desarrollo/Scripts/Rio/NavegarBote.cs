@@ -27,6 +27,9 @@ public class NavegarBote : MonoBehaviour
 
     public bool Navegando { get; private set; }
 
+    // True solo cuando el bote ya está avanzando, sin contar la espera antes de zarpar
+    public bool EnMovimiento => Navegando && espera <= 0f;
+
     const int muestrasPorTramo = 12;
 
     Vector3[] camino;
