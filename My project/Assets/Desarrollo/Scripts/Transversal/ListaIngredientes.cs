@@ -6,8 +6,8 @@ using UnityEngine.UI;
 
 // Lista de ingredientes del plato de la experiencia. Se abre desde el botón MENÚ del menú de la palma.
 // Cada ingrediente se marca con un chulito mientras está guardado en la canasta (encajado en la zona de
-// ingredientes del Canasto); si el jugador lo saca, se desmarca. Los ingredientes se agrupan en columnas
-// según su chagra.
+// ingredientes del Canasto); si el jugador lo saca, se desmarca. Al echarlo en la olla de la maloca
+// sigue marcado. Los ingredientes se agrupan en columnas según su chagra.
 public class ListaIngredientes : MonoBehaviour
 {
     [System.Serializable]
@@ -20,6 +20,9 @@ public class ListaIngredientes : MonoBehaviour
 
         [Tooltip("Raíz del ingrediente en la escena (la misma que está en la lista del Canasto)")]
         public Transform objeto;
+
+        // Ya lo echaron en la olla de la maloca (lo marca OllaSopa)
+        [System.NonSerialized] public bool enOlla;
 
         [System.NonSerialized] public SnapInteractor encaje;
         [System.NonSerialized] public Image fondoCasilla, palitoCorto, palitoLargo;
@@ -63,9 +66,13 @@ public class ListaIngredientes : MonoBehaviour
 
     public bool Abierto { get; private set; }
 
-    // Cuántos ingredientes hay ahora en la canasta
+    // Cuántos ingredientes hay ahora en la canasta y cuántos ya se echaron en la olla
     public int Guardados { get; private set; }
-    public bool Completa => Guardados == ingredientes.Count && ingredientes.Count > 0;
+    public int EnOlla { get; private set; }
+    public bool Completa => Guardados + EnOlla == ingredientes.Count && ingredientes.Count > 0;
+
+    // Mensaje final que muestra la lista cuando la sopa queda lista (lo pone OllaSopa)
+    [System.NonSerialized] public string mensajeFinal;
 
     bool dibujado;
     bool cerrarPendiente;
@@ -80,10 +87,14 @@ public class ListaIngredientes : MonoBehaviour
     void Update()
     {
         // Se cuenta aunque el panel esté cerrado, para que otros scripts (la olla) puedan preguntar
-        int guardados = 0;
+        int guardados = 0, enOlla = 0;
         foreach (Ingrediente ingrediente in ingredientes)
-            if (EnCanasta(ingrediente)) guardados++;
+        {
+            if (ingrediente.enOlla) enOlla++;
+            else if (EnCanasta(ingrediente)) guardados++;
+        }
         Guardados = guardados;
+        EnOlla = enOlla;
 
         if (Abierto) Actualizar();
     }
@@ -134,21 +145,30 @@ public class ListaIngredientes : MonoBehaviour
 
     void Actualizar()
     {
-        int guardados = 0;
+        int guardados = 0, enOlla = 0;
         foreach (Ingrediente ingrediente in ingredientes)
         {
-            bool guardado = EnCanasta(ingrediente);
-            if (guardado) guardados++;
+            if (ingrediente.enOlla) enOlla++;
+            else if (EnCanasta(ingrediente)) guardados++;
+            bool marcado = ingrediente.enOlla || EnCanasta(ingrediente);
             if (!ingrediente.texto) continue;
-            ingrediente.fondoCasilla.color = guardado ? colorGuardado : colorPendiente;
-            ingrediente.palitoCorto.enabled = guardado;
-            ingrediente.palitoLargo.enabled = guardado;
-            ingrediente.texto.color = guardado ? colorTextoGuardado : colorTextoPendiente;
+            ingrediente.fondoCasilla.color = marcado ? colorGuardado : colorPendiente;
+            ingrediente.palitoCorto.enabled = marcado;
+            ingrediente.palitoLargo.enabled = marcado;
+            ingrediente.texto.color = marcado ? colorTextoGuardado : colorTextoPendiente;
         }
 
-        textoProgreso.text = guardados == ingredientes.Count
-            ? $"¡Tienes todo! Lleva la canasta a la maloca para cocinar la {nombrePlato.ToLower()}."
-            : $"En la canasta: {guardados} de {ingredientes.Count}";
+        int total = ingredientes.Count;
+        if (!string.IsNullOrEmpty(mensajeFinal))
+            textoProgreso.text = mensajeFinal;
+        else if (enOlla == total)
+            textoProgreso.text = "Todo está en la olla: mezcla con la cuchara.";
+        else if (enOlla > 0)
+            textoProgreso.text = $"En la olla: {enOlla} de {total}   ·   En la canasta: {guardados}";
+        else if (guardados == total)
+            textoProgreso.text = $"¡Tienes todo! Lleva la canasta a la maloca para cocinar la {nombrePlato.ToLower()}.";
+        else
+            textoProgreso.text = $"En la canasta: {guardados} de {total}";
     }
 
     // Una columna por grupo, en el orden en que aparecen en la lista
@@ -156,6 +176,11 @@ public class ListaIngredientes : MonoBehaviour
     {
         dibujado = true;
         if (titulo) titulo.text = $"Ingredientes · {nombrePlato}";
+
+        // Los mensajes largos se achican para caber en una línea
+        textoProgreso.fontSizeMax = textoProgreso.fontSize;
+        textoProgreso.fontSizeMin = 14f;
+        textoProgreso.enableAutoSizing = true;
         foreach (Transform hijo in contenido) Destroy(hijo.gameObject);
 
         var grupos = new List<string>();

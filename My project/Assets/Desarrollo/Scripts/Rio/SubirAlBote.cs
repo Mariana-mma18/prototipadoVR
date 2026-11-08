@@ -88,8 +88,15 @@ public class SubirAlBote : MonoBehaviour
             ocultarAlSubir.SetActive(false);
         }
 
+        if (!EnBote) return;
+
+        // El rig de Meta vuelve a encender la locomoción de controles cuando el rayo del control deja de apuntar
+        // a un botón (ScrollLocomotionGate); en el bote la mantengo apagada
+        foreach (var obj in locomocion)
+            if (obj && obj.activeSelf) obj.SetActive(false);
+
         // Sigo al asiento cada frame para que el jugador viaje con el bote cuando navegue
-        if (EnBote) SeguirAsiento();
+        SeguirAsiento();
     }
 
     void SeguirAsiento()
