@@ -755,6 +755,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects:
     - {fileID: -8700617353114198275, guid: d0e53e9c895ef6f4f83ce57f87cb2efd, type: 3}
+    - {fileID: 65702495048144492, guid: d0e53e9c895ef6f4f83ce57f87cb2efd, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d0e53e9c895ef6f4f83ce57f87cb2efd, type: 3}
@@ -1629,19 +1630,19 @@ PrefabInstance:
     - target: {fileID: -6093592463355912122, guid: 582c2bde200bf2e4590a60d6ea0070a8, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 151c30c9534bd7f4ea5bd9e2292ff93f, type: 2}
+      objectReference: {fileID: 2100000, guid: 9cb9d407a9b99014a96fc97b223bce5a, type: 2}
     - target: {fileID: -6093592463355912122, guid: 582c2bde200bf2e4590a60d6ea0070a8, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
-      objectReference: {fileID: 2100000, guid: 151c30c9534bd7f4ea5bd9e2292ff93f, type: 2}
+      objectReference: {fileID: 2100000, guid: 745b9a68b2adb0f409117df17ecbd477, type: 2}
     - target: {fileID: -6093592463355912122, guid: 582c2bde200bf2e4590a60d6ea0070a8, type: 3}
       propertyPath: 'm_Materials.Array.data[2]'
       value: 
-      objectReference: {fileID: 2100000, guid: 151c30c9534bd7f4ea5bd9e2292ff93f, type: 2}
+      objectReference: {fileID: 2100000, guid: 745b9a68b2adb0f409117df17ecbd477, type: 2}
     - target: {fileID: -6093592463355912122, guid: 582c2bde200bf2e4590a60d6ea0070a8, type: 3}
       propertyPath: 'm_Materials.Array.data[3]'
       value: 
-      objectReference: {fileID: 2100000, guid: 151c30c9534bd7f4ea5bd9e2292ff93f, type: 2}
+      objectReference: {fileID: 2100000, guid: 745b9a68b2adb0f409117df17ecbd477, type: 2}
     - target: {fileID: 919132149155446097, guid: 582c2bde200bf2e4590a60d6ea0070a8, type: 3}
       propertyPath: m_Name
       value: mesa_comedor2
@@ -3511,6 +3512,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects:
     - {fileID: -8700617353114198275, guid: d0e53e9c895ef6f4f83ce57f87cb2efd, type: 3}
+    - {fileID: 65702495048144492, guid: d0e53e9c895ef6f4f83ce57f87cb2efd, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d0e53e9c895ef6f4f83ce57f87cb2efd, type: 3}
@@ -3825,11 +3827,11 @@ PrefabInstance:
     - target: {fileID: -6093592463355912122, guid: 582c2bde200bf2e4590a60d6ea0070a8, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
-      objectReference: {fileID: 2100000, guid: 151c30c9534bd7f4ea5bd9e2292ff93f, type: 2}
+      objectReference: {fileID: 2100000, guid: 745b9a68b2adb0f409117df17ecbd477, type: 2}
     - target: {fileID: -6093592463355912122, guid: 582c2bde200bf2e4590a60d6ea0070a8, type: 3}
       propertyPath: 'm_Materials.Array.data[2]'
       value: 
-      objectReference: {fileID: 2100000, guid: 151c30c9534bd7f4ea5bd9e2292ff93f, type: 2}
+      objectReference: {fileID: 2100000, guid: 745b9a68b2adb0f409117df17ecbd477, type: 2}
     - target: {fileID: -6093592463355912122, guid: 582c2bde200bf2e4590a60d6ea0070a8, type: 3}
       propertyPath: 'm_Materials.Array.data[3]'
       value: 
@@ -4062,6 +4064,14 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 9cb9d407a9b99014a96fc97b223bce5a, type: 2}
+    - target: {fileID: -6093592463355912122, guid: 582c2bde200bf2e4590a60d6ea0070a8, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 745b9a68b2adb0f409117df17ecbd477, type: 2}
+    - target: {fileID: -6093592463355912122, guid: 582c2bde200bf2e4590a60d6ea0070a8, type: 3}
+      propertyPath: 'm_Materials.Array.data[2]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 745b9a68b2adb0f409117df17ecbd477, type: 2}
     - target: {fileID: 919132149155446097, guid: 582c2bde200bf2e4590a60d6ea0070a8, type: 3}
       propertyPath: m_Name
       value: mesa_comedor2 (2)
@@ -5406,6 +5416,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects:
     - {fileID: -8700617353114198275, guid: 309e7bc6f979b4b4f805852f7f94c022, type: 3}
+    - {fileID: 65702495048144492, guid: 309e7bc6f979b4b4f805852f7f94c022, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 309e7bc6f979b4b4f805852f7f94c022, type: 3}
