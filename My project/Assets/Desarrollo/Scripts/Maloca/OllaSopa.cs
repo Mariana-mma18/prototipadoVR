@@ -62,6 +62,9 @@ public class OllaSopa : MonoBehaviour
     [Header("Indicación sobre la olla")]
     public TMP_Text indicacion;
 
+    [Tooltip("Texto sobre la olla y en la lista del menú cuando el plato queda listo")]
+    public string textoListo = "¡El inchicapi está listo!";
+
     [Tooltip("Más lejos que esto, en metros, la indicación no se muestra")]
     public float distanciaIndicacion = 12f;
 
@@ -274,8 +277,8 @@ public class OllaSopa : MonoBehaviour
         }
         foreach (EnOlla dentro in enOlla) dentro.objeto.gameObject.SetActive(false);
 
-        if (lista) lista.mensajeFinal = $"¡La {lista.nombrePlato.ToLower()} está lista!";
-        Debug.Log("[OllaSopa] La sopa está lista: fin del recorrido");
+        if (lista) lista.mensajeFinal = textoListo;
+        Debug.Log($"[OllaSopa] {textoListo} Fin del recorrido");
         alTerminar.Invoke();
     }
 
@@ -327,7 +330,7 @@ public class OllaSopa : MonoBehaviour
                     : $"Mezclando... {Mathf.RoundToInt(ProgresoMezcla * 100f)} %";
                 break;
             default:
-                indicacion.text = $"¡La {lista.nombrePlato.ToLower()} está lista!";
+                indicacion.text = textoListo;
                 break;
         }
     }

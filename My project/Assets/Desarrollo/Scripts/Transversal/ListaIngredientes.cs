@@ -30,8 +30,11 @@ public class ListaIngredientes : MonoBehaviour
     }
 
     [Header("Plato")]
-    [Tooltip("Nombre del plato que se cocina en la maloca")]
-    public string nombrePlato = "Sopa";
+    [Tooltip("Nombre del plato que se cocina en la Maloka (sale en el título de la lista)")]
+    public string nombrePlato = "Inchicapi";
+
+    [Tooltip("Mensaje de la lista cuando ya están todos los ingredientes en la canasta")]
+    public string mensajeTodoRecogido = "¡Tienes todo! Lleva la canasta a la Maloka para cocinar el inchicapi.";
 
     public List<Ingrediente> ingredientes = new List<Ingrediente>();
 
@@ -71,7 +74,7 @@ public class ListaIngredientes : MonoBehaviour
     public int EnOlla { get; private set; }
     public bool Completa => Guardados + EnOlla == ingredientes.Count && ingredientes.Count > 0;
 
-    // Mensaje final que muestra la lista cuando la sopa queda lista (lo pone OllaSopa)
+    // Mensaje final que muestra la lista cuando el plato queda listo (lo pone OllaSopa)
     [System.NonSerialized] public string mensajeFinal;
 
     bool dibujado;
@@ -166,7 +169,7 @@ public class ListaIngredientes : MonoBehaviour
         else if (enOlla > 0)
             textoProgreso.text = $"En la olla: {enOlla} de {total}   ·   En la canasta: {guardados}";
         else if (guardados == total)
-            textoProgreso.text = $"¡Tienes todo! Lleva la canasta a la maloca para cocinar la {nombrePlato.ToLower()}.";
+            textoProgreso.text = mensajeTodoRecogido;
         else
             textoProgreso.text = $"En la canasta: {guardados} de {total}";
     }
