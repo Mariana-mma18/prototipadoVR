@@ -11,6 +11,10 @@ public class DialogoYari : MonoBehaviour
     [Range(0f, 1f)]
     public float volumen = 1f;
 
+    [Tooltip("Sube la voz por encima del máximo de Unity (2 = el doble, unos +6 dB). Tiene límite suave para que no distorsione.")]
+    [Range(1f, 4f)]
+    public float ganancia = 2f;
+
     [Tooltip("Segundo del clip donde empieza la voz")]
     public float inicio = 0f;
 
@@ -33,6 +37,7 @@ public class DialogoYari : MonoBehaviour
     public bool Hablando { get; private set; }
 
     AudioSource fuente;
+    GananciaAudio amplificador;
     bool yaSono;
     float posicion;     // segundo del clip, con reloj propio (el clip va en streaming)
 
@@ -44,6 +49,10 @@ public class DialogoYari : MonoBehaviour
         fuente.loop = false;
         fuente.spatialBlend = 0f;   // 2D: la voz del guía se escucha igual mire donde mire
         fuente.volume = 0f;
+
+        // Se añade después de la AudioSource para que el filtro actúe sobre su sonido
+        amplificador = gameObject.AddComponent<GananciaAudio>();
+        amplificador.ganancia = ganancia;
     }
 
     [ContextMenu("Probar: reproducir")]
@@ -75,6 +84,7 @@ public class DialogoYari : MonoBehaviour
     {
         if (!Hablando) return;
 
+        amplificador.ganancia = ganancia;   // permite ajustarla en el inspector durante Play
         posicion += Time.unscaledDeltaTime;
         float final = fin > 0f ? Mathf.Min(fin, clip.length) : clip.length;
 

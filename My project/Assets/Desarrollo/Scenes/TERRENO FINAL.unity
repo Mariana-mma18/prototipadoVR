@@ -14726,11 +14726,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DialogoYari
   clip: {fileID: 8300000, guid: 5d6f8f2a12e367045af2e28fb6beaee7, type: 3}
   volumen: 1
+  ganancia: 3
   inicio: 15.5
   fin: 37.5
   fundido: 0.5
   soloUnaVez: 1
-  bajarAmbienteA: 0.5
+  bajarAmbienteA: 0.3
   alTerminar:
     m_PersistentCalls:
       m_Calls: []
@@ -45443,11 +45444,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DialogoYari
   clip: {fileID: 8300000, guid: 73e9bfaf653bc5740913cb51fd237c51, type: 3}
   volumen: 1
+  ganancia: 2.5
   inicio: 12.5
   fin: 38.5
   fundido: 0.5
   soloUnaVez: 1
-  bajarAmbienteA: 0.5
+  bajarAmbienteA: 0.3
   alTerminar:
     m_PersistentCalls:
       m_Calls: []
