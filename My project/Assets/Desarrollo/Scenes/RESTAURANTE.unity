@@ -1378,6 +1378,7 @@ GameObject:
   - component: {fileID: 221786972}
   - component: {fileID: 221786971}
   - component: {fileID: 221786976}
+  - component: {fileID: 221786977}
   m_Layer: 0
   m_Name: '[BuildingBlock] Camera Rig'
   m_TagString: Untagged
@@ -1564,6 +1565,21 @@ MonoBehaviour:
   modo: 0
   giro: 0
   gradosGiro: 45
+--- !u!114 &221786977
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 221786970}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efea5a3033d584543a2507f1367617de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ControlesSoloEnMano
+  esperaAlSoltar: 0.3
+  estadoIzquierdo: 
+  estadoDerecho: 
 --- !u!1 &240754877
 GameObject:
   m_ObjectHideFlags: 0

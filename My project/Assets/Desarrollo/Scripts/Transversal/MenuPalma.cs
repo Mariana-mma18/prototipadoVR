@@ -291,7 +291,8 @@ public class MenuPalma : MonoBehaviour
 
         Transform ojos = camaraRig.centerEyeAnchor;
         texto.transform.SetPositionAndRotation(ojos.position + ojos.forward * 0.6f - ojos.up * 0.18f, Quaternion.LookRotation(ojos.forward, ojos.up));
-        texto.text = $"Izq: {lecturaIzquierda}\nDer: {lecturaDerecha}\nAbrir si palma < {anguloPalma:F0}° y vista < {anguloVista:F0}°";
+        texto.text = $"Izq: {lecturaIzquierda}\nDer: {lecturaDerecha}\nAbrir si palma < {anguloPalma:F0}° y vista < {anguloVista:F0}°"
+            + (ControlesSoloEnMano.Resumen.Length > 0 ? "\n" + ControlesSoloEnMano.Resumen : "");
     }
 
     bool BuscarReferencias()
