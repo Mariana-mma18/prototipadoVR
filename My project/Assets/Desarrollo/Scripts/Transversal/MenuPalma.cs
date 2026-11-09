@@ -9,7 +9,7 @@ using UnityEngine.UI;
 // Al abrir la mano con la palma volteada hacia la cara aparece un ícono sobre ella que se va llenando como un reloj;
 // si se mantiene hasta que se llena, se abre el menú (Mapa / Menú). Así no se abre sin querer al voltear la mano.
 // El menú se cierra con la X. También se abre y cierra con el gesto de menú de Meta (mirar la palma izquierda y pellizcar)
-// o con el botón de menú del control izquierdo.
+// o con el botón de menú (☰) del control izquierdo o B / Y de cualquier control.
 public class MenuPalma : MonoBehaviour
 {
     [Header("Referencias (vacías = se buscan solas en el Camera Rig)")]
@@ -136,8 +136,9 @@ public class MenuPalma : MonoBehaviour
             && Vector3.Distance(panel.position, camaraRig.centerEyeAnchor.position) > distanciaCierre)
             Cerrar();
 
-        // Gesto de menú de Meta (palma izquierda + pellizco) o botón de menú del control izquierdo
-        if (OVRInput.GetDown(OVRInput.Button.Start))
+        // Gesto de menú de Meta (palma izquierda + pellizco), botón de menú (☰) del control izquierdo,
+        // o B / Y en cualquiera de los dos controles (el derecho no tiene ☰). B/Y no lo usa la locomoción.
+        if (OVRInput.GetDown(OVRInput.Button.Start) || OVRInput.GetDown(OVRInput.Button.Two, OVRInput.Controller.Touch))
         {
             if (Abierto) Cerrar();
             else AbrirFrenteAlJugador();

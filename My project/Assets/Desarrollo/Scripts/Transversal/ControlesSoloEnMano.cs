@@ -58,16 +58,21 @@ public class ControlesSoloEnMano : MonoBehaviour
             Debug.LogWarning($"[ControlesSoloEnMano] Esperaba los dos lados (ComprehensiveInteractorsLeft/Right) y encontré {lados.Count}; ¿cambió el building block de Meta?");
     }
 
+    [Tooltip("Solo para mirar en Play: qué está haciendo cada lado (el interactor que tiene el hover o la selección)")]
+    public string accionIzquierda;
+    public string accionDerecha;
+
     void Update()
     {
-        estadoIzquierdo = estadoDerecho = "-";
+        estadoIzquierdo = estadoDerecho = accionIzquierda = accionDerecha = "-";
         foreach (ControlEnMano lado in lados)
         {
             if (!lado) continue;
-            if (lado.EsIzquierdo) estadoIzquierdo = lado.Estado;
-            else estadoDerecho = lado.Estado;
+            if (lado.EsIzquierdo) { estadoIzquierdo = lado.Estado; accionIzquierda = lado.QueHace(); }
+            else { estadoDerecho = lado.Estado; accionDerecha = lado.QueHace(); }
         }
-        Resumen = $"Control izq: {estadoIzquierdo}   der: {estadoDerecho}";
+        // Mientras un lado está "agarrando" o "apretando" algo, el poke de ese lado no funciona
+        Resumen = $"Control izq: {estadoIzquierdo}   der: {estadoDerecho}\nIzq hace: {accionIzquierda}\nDer hace: {accionDerecha}";
     }
 
     // Cambia el ControllerRef por la condición nueva en las ActiveStateGroup/Not/Tracker de ese lado
@@ -122,6 +127,48 @@ public class ControlEnMano : MonoBehaviour, IActiveState
 
     public bool EsIzquierdo => control && control.Handedness == Handedness.Left;
     public string Estado { get; private set; } = "-";
+
+    IInteractor[] interactores;
+
+    // El interactor de este lado que está apuntando (hover) o agarrando/apretando (select), y sobre qué.
+    // El grupo de Meta deja actuar a uno solo por lado: si otro está en select, el poke queda bloqueado.
+    public string QueHace()
+    {
+        if (interactores == null)
+        {
+            var lista = new List<IInteractor>();
+            foreach (MonoBehaviour mb in GetComponentsInChildren<MonoBehaviour>(true))
+                if (mb is IInteractor interactor && !(mb is InteractorGroup)) lista.Add(interactor);
+            interactores = lista.ToArray();
+        }
+
+        string apuntando = null;
+        foreach (IInteractor interactor in interactores)
+        {
+            if (!(interactor is MonoBehaviour mb) || !mb.isActiveAndEnabled) continue;
+            if (interactor.State == InteractorState.Select)
+                return $"{Nombre(mb)} APRETANDO {Objetivo(mb, "SelectedInteractable")}";
+            if (interactor.State == InteractorState.Hover && apuntando == null)
+                apuntando = $"{Nombre(mb)} apunta a {Objetivo(mb, "Interactable")}";
+        }
+        return apuntando ?? "nada";
+    }
+
+    static string Nombre(MonoBehaviour interactor) => interactor.name.Replace("Interactor", "");
+
+    static string Objetivo(MonoBehaviour interactor, string propiedad)
+    {
+        object objetivo = null;
+        try
+        {
+            for (System.Type tipo = interactor.GetType(); tipo != null && objetivo == null; tipo = tipo.BaseType)
+                objetivo = tipo.GetProperty(propiedad, BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly)?.GetValue(interactor);
+        }
+        catch (System.Exception) { }
+        if (!(objetivo is Component c) || !c) return "?";
+        // El building block suele llamarse "[BuildingBlock] ..."; el padre dice más (Poke Subir Muelle 3, Canasto...)
+        return c.name.StartsWith("[BuildingBlock]") && c.transform.parent ? c.transform.parent.name : c.name;
+    }
 
     public bool Active
     {
