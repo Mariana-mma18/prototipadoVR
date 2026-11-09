@@ -31,7 +31,15 @@ public class AmbienteEnBucle : MonoBehaviour
 
     static readonly List<AmbienteEnBucle> activos = new List<AmbienteEnBucle>();
 
+    // Volumen al que bajan todos los ambientes mientras habla Yari (lo fija DialogoYari; 1 = sin bajar)
+    public static float atenuacionVoz = 1f;
+    const float velocidadAtenuacion = 1.5f;   // cuánto cambia por segundo al bajar o subir
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void Reiniciar() => atenuacionVoz = 1f;
+
     AudioSource[] fuentes;
+    float voz = 1f;
     float[] pesos = new float[2];
     int actual;
     float posicion, posicionInicio;
@@ -71,6 +79,7 @@ public class AmbienteEnBucle : MonoBehaviour
         if (clip == null) return;
 
         general = Mathf.MoveTowards(general, objetivoGeneral, velocidadGeneral * Time.unscaledDeltaTime);
+        voz = Mathf.MoveTowards(voz, atenuacionVoz, velocidadAtenuacion * Time.unscaledDeltaTime);
 
         // Posición en el clip llevada con reloj propio: AudioSource.time es poco fiable con clips en streaming
         posicion += Time.unscaledDeltaTime;
@@ -93,7 +102,7 @@ public class AmbienteEnBucle : MonoBehaviour
 
             // Fundido de potencia constante para que el cruce no se sienta como un bajón
             float curva = Mathf.Sin(pesos[i] * Mathf.PI * 0.5f);
-            fuentes[i].volume = volumen * intensidad * general * curva;
+            fuentes[i].volume = volumen * intensidad * general * voz * curva;
         }
     }
 
