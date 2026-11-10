@@ -29,12 +29,21 @@ public static class PoblarOrillasRio
     // Cada cuántos metros del río se intenta poner algo y con qué probabilidad (por lado).
     const float Paso = 3f;
     const float ProbPasto = 0.8f;
-    const float ProbArbolito = 0.36f;
+    const float ProbArbolito = 0.55f;
     const float ProbPalmera = 0.22f;
 
     // Tamaño de la imagen del arbolito en metros (el árbol ocupa ~88 % de la altura).
-    const float TamArbolitoMin = 11f;
-    const float TamArbolitoMax = 16f;
+    // Salen más medianos que gigantes: cuanto mayor CurvaTamano, más raros los grandes.
+    const float TamArbolitoMin = 6f;
+    const float TamArbolitoMax = 22f;
+    const float CurvaTamano = 1.6f;
+
+    // Bosque tierra adentro: árboles sueltos y en manchas desde la orilla hasta DistanciaBosque del río.
+    const float DistanciaBosqueMin = 14f;  // desde el centro del río
+    const float DistanciaBosque = 75f;
+    const float CeldaBosque = 10f;         // un intento por celda de este tamaño (m)
+    const float TamanoManchasBosque = 60f; // manchas de ruido: zonas más tupidas y claros
+    const float ProbPalmeraBosque = 0.15f; // parte de los árboles del bosque son palmeras
 
     // Arbustos provisionales (grupos de Pastito grande y oscuro) hasta que diseño haga un arbusto.
     const string MatArbusto = "Assets/Desarrollo/Materiales/Arbusto provisional (orilla).mat";
@@ -141,11 +150,9 @@ public static class PoblarOrillasRio
                         if (Libre(p, zonas) && Lejos(p, posArbolitos, SeparacionArbolitos) && Lejos(p, posPalmeras, SeparacionArbolPalmera)
                             && Pendiente(terreno, p) > 0.8f && terreno.SampleHeight(V3(p)) > AlturaBorde - 0.5f)
                         {
-                            float tam = Rango(rnd, TamArbolitoMin, TamArbolitoMax);
                             var pos = Suelo(terreno, p);
                             posArbolitos.Add(pos);
-                            // La imagen deja ~5 % vacío abajo; se hunde un poco para que las raíces toquen el suelo.
-                            CrearPlano("Arbolito", arbolitos, pos, normal, quad, matArbolito, tam, tam, tam * 0.05f + 0.3f);
+                            CrearArbolito(arbolitos, pos, normal, quad, matArbolito, rnd);
                         }
                     }
 
@@ -156,19 +163,10 @@ public static class PoblarOrillasRio
                         if (Libre(p, zonas) && Lejos(p, posPalmeras, SeparacionPalmeras) && Lejos(p, posArbolitos, SeparacionArbolPalmera)
                             && Pendiente(terreno, p) > 0.8f && terreno.SampleHeight(V3(p)) > AlturaBorde - 0.5f)
                         {
-                            float escala = Rango(rnd, 1.9f, 2.8f);
                             var pos = Suelo(terreno, p);
                             posPalmeras.Add(pos);
-                            var palmera = Object.Instantiate(modelo, palmeras);
-                            palmera.name = "Palmera " + posPalmeras.Count;
-                            palmera.transform.localScale = Vector3.one * escala;
-                            // Gira al azar y se inclina un poco hacia el río.
-                            var giro = Quaternion.Euler(0f, Rango(rnd, 0f, 360f), 0f);
-                            var inclinacion = Quaternion.AngleAxis(Rango(rnd, 0f, 6f), Vector3.Cross(Vector3.up, -V3(normal)));
-                            palmera.transform.SetPositionAndRotation(pos + Vector3.up * (baseModelo * escala - 0.4f), inclinacion * giro);
-                            GameObjectUtility.SetStaticEditorFlags(palmera, StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccludeeStatic);
-                            foreach (Transform hijo in palmera.GetComponentsInChildren<Transform>())
-                                GameObjectUtility.SetStaticEditorFlags(hijo.gameObject, StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccludeeStatic);
+                            // Se inclina un poco hacia el río.
+                            CrearPalmera(modelo, palmeras, pos, -V3(normal), baseModelo, posPalmeras.Count, rnd);
                         }
                     }
 
@@ -189,8 +187,49 @@ public static class PoblarOrillasRio
             }
         }
 
+        // Bosque tierra adentro: una celda cada CeldaBosque metros a lo largo del recorrido, con manchas de ruido
+        // (zonas tupidas y claros). Azar propio para no mover lo de la orilla.
+        var rndBosque = new System.Random(Semilla + 2);
+        int enBosque = 0;
+        var tp = terreno.transform.position; var ts = terreno.terrainData.size;
+        float minX = float.MaxValue, minZ = float.MaxValue, maxX = float.MinValue, maxZ = float.MinValue;
+        foreach (var c in cauce) { minX = Mathf.Min(minX, c.x); maxX = Mathf.Max(maxX, c.x); minZ = Mathf.Min(minZ, c.y); maxZ = Mathf.Max(maxZ, c.y); }
+        minX = Mathf.Max(minX - DistanciaBosque, tp.x + 2f); maxX = Mathf.Min(maxX + DistanciaBosque, tp.x + ts.x - 2f);
+        minZ = Mathf.Max(minZ - DistanciaBosque, tp.z + 2f); maxZ = Mathf.Min(maxZ + DistanciaBosque, tp.z + ts.z - 2f);
+        for (float z = minZ; z < maxZ; z += CeldaBosque)
+            for (float x = minX; x < maxX; x += CeldaBosque)
+            {
+                var p = new Vector2(x + Rango(rndBosque, 0f, CeldaBosque), z + Rango(rndBosque, 0f, CeldaBosque));
+                float mancha = Mathf.PerlinNoise(p.x / TamanoManchasBosque + 31.7f, p.y / TamanoManchasBosque + 12.3f);
+                double azar = rndBosque.NextDouble();
+                bool esPalmera = rndBosque.NextDouble() < ProbPalmeraBosque;
+                // Más probable cerca del río y dentro de las manchas.
+                float dRio = DistanciaAlCauce(p, cauce);
+                if (dRio < DistanciaBosqueMin || dRio > DistanciaBosque) continue;
+                float prob = Mathf.Clamp01((mancha - 0.3f) * 1.6f) * Mathf.Lerp(1f, 0.55f, (dRio - DistanciaBosqueMin) / (DistanciaBosque - DistanciaBosqueMin));
+                if (azar >= prob) continue;
+                if (!Libre(p, zonas) || Pendiente(terreno, p) < 0.8f || terreno.SampleHeight(V3(p)) < AlturaBorde) continue;
+
+                var pos = Suelo(terreno, p);
+                Vector3 haciaRio = V3(CercanoEnCauce(p, cauce) - p).normalized;
+                if (esPalmera)
+                {
+                    if (!Lejos(p, posPalmeras, SeparacionPalmeras) || !Lejos(p, posArbolitos, SeparacionArbolPalmera)) continue;
+                    posPalmeras.Add(pos);
+                    CrearPalmera(modelo, palmeras, pos, haciaRio, baseModelo, posPalmeras.Count, rndBosque);
+                }
+                else
+                {
+                    if (!Lejos(p, posArbolitos, SeparacionArbolitos) || !Lejos(p, posPalmeras, SeparacionArbolPalmera)) continue;
+                    posArbolitos.Add(pos);
+                    CrearArbolito(arbolitos, pos, new Vector2(-haciaRio.x, -haciaRio.z), quad, matArbolito, rndBosque);
+                }
+                enBosque++;
+            }
+
         EditorSceneManager.MarkSceneDirty(escena);
-        string resumen = $"Orillas del río: {palmeras.childCount} palmeras, {arbolitos.childCount} arbolitos, {pasto.childCount} matas de pasto.";
+        string resumen = $"Orillas del río: {palmeras.childCount} palmeras, {arbolitos.childCount} arbolitos, {pasto.childCount} matas de pasto, " +
+                         $"{arbustos.childCount} arbustos ({enBosque} árboles tierra adentro).";
         Debug.Log(resumen);
         return resumen;
     }
@@ -267,6 +306,46 @@ public static class PoblarOrillasRio
         mr.lightProbeUsage = LightProbeUsage.Off;
         mr.reflectionProbeUsage = ReflectionProbeUsage.Off;
     }
+
+    // Arbolito de tamaño variado: más medianos que gigantes, y algunos un poco más anchos o angostos.
+    static void CrearArbolito(Transform padre, Vector3 pos, Vector2 haciaAfuera, Mesh quad, Material mat, System.Random rnd)
+    {
+        float tam = Mathf.Lerp(TamArbolitoMin, TamArbolitoMax, Mathf.Pow((float)rnd.NextDouble(), CurvaTamano));
+        float ancho = tam * Rango(rnd, 0.9f, 1.15f);
+        // La imagen deja ~5 % vacío abajo; se hunde un poco para que las raíces toquen el suelo.
+        CrearPlano("Arbolito", padre, pos, haciaAfuera, quad, mat, ancho, tam, tam * 0.05f + 0.3f);
+    }
+
+    static void CrearPalmera(GameObject modelo, Transform padre, Vector3 pos, Vector3 inclinarHacia, float baseModelo, int numero, System.Random rnd)
+    {
+        float escala = Rango(rnd, 1.6f, 3f);
+        var palmera = Object.Instantiate(modelo, padre);
+        palmera.name = "Palmera " + numero;
+        palmera.transform.localScale = Vector3.one * escala;
+        var giro = Quaternion.Euler(0f, Rango(rnd, 0f, 360f), 0f);
+        inclinarHacia.y = 0f;
+        var eje = inclinarHacia.sqrMagnitude > 0.001f ? Vector3.Cross(Vector3.up, inclinarHacia.normalized) : Vector3.right;
+        var inclinacion = Quaternion.AngleAxis(Rango(rnd, 0f, 6f), eje);
+        palmera.transform.SetPositionAndRotation(pos + Vector3.up * (baseModelo * escala - 0.4f), inclinacion * giro);
+        foreach (Transform hijo in palmera.GetComponentsInChildren<Transform>())
+            GameObjectUtility.SetStaticEditorFlags(hijo.gameObject, StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccludeeStatic);
+    }
+
+    static Vector2 CercanoEnCauce(Vector2 p, List<Vector2> cauce)
+    {
+        Vector2 mejor = cauce[0]; float dMejor = float.MaxValue;
+        for (int i = 0; i < cauce.Count - 1; i++)
+        {
+            Vector2 a = cauce[i], ab = cauce[i + 1] - a;
+            float t = Mathf.Clamp01(Vector2.Dot(p - a, ab) / Mathf.Max(ab.sqrMagnitude, 0.0001f));
+            Vector2 q = a + ab * t;
+            float d = (p - q).sqrMagnitude;
+            if (d < dMejor) { dMejor = d; mejor = q; }
+        }
+        return mejor;
+    }
+
+    static float DistanciaAlCauce(Vector2 p, List<Vector2> cauce) => Vector2.Distance(p, CercanoEnCauce(p, cauce));
 
     // Grupo de 3 a 5 matas grandes en un mismo plano (todo el grupo gira hacia la cámara).
     static void CrearArbusto(Transform padre, Vector3 pos, Vector2 haciaAfuera, Mesh quad, Material mat, System.Random rnd)
