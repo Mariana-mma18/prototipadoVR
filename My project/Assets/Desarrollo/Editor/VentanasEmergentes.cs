@@ -205,6 +205,8 @@ public static class VentanasEmergentes
             { "Maní", new Vector2(400f, 740f) },
             { "Yuca", new Vector2(960f, 578f) },
             { "Sacha culantro", new Vector2(1265f, 745f) },
+            // "Gallina Criolla" llega casi al borde derecho: el chulo va debajo del nombre
+            { "Gallina criolla", new Vector2(1545f, 690f) },
         };
         Sprite chulo = Cargar("BOTÓN CHULO-11.png");
         RectTransform contenedor = BuscarOCrear(rt, "Chulos");

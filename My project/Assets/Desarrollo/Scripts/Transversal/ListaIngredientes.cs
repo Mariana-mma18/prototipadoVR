@@ -7,7 +7,8 @@ using UnityEngine.UI;
 // Lista de ingredientes del plato de la experiencia. Se abre desde el botón MENÚ del menú de la palma.
 // Cada ingrediente se marca con un chulito mientras está guardado en la canasta (encajado en la zona de
 // ingredientes del Canasto); si el jugador lo saca, se desmarca. Al echarlo en la olla de la maloca
-// sigue marcado. Los ingredientes se agrupan en columnas según su chagra.
+// sigue marcado. Los ingredientes se agrupan en columnas según su chagra. Los que esperan en la Maloka
+// (enLaMaloka, la gallina) no van en la canasta: se marcan al echarlos en la olla.
 public class ListaIngredientes : MonoBehaviour
 {
     [System.Serializable]
@@ -20,6 +21,9 @@ public class ListaIngredientes : MonoBehaviour
 
         [Tooltip("Raíz del ingrediente en la escena (la misma que está en la lista del Canasto)")]
         public Transform objeto;
+
+        [Tooltip("Ya espera en la Maloka junto a la olla (la gallina): no se guarda en la canasta, se echa directo en la olla")]
+        public bool enLaMaloka;
 
         // Ya lo echaron en la olla de la maloca (lo marca OllaSopa)
         [System.NonSerialized] public bool enOlla;
@@ -72,7 +76,12 @@ public class ListaIngredientes : MonoBehaviour
     // Cuántos ingredientes hay ahora en la canasta y cuántos ya se echaron en la olla
     public int Guardados { get; private set; }
     public int EnOlla { get; private set; }
-    public bool Completa => Guardados + EnOlla == ingredientes.Count && ingredientes.Count > 0;
+    // Ya se recogió todo lo que va en la canasta (lo que espera en la Maloka no cuenta)
+    public bool Completa => Guardados + EnOllaDeCanasta == ParaCanasta && ParaCanasta > 0;
+
+    // Ingredientes que hay que llevar en la canasta y, de ellos, cuántos ya están en la olla
+    int ParaCanasta => ingredientes.FindAll(i => !i.enLaMaloka).Count;
+    int EnOllaDeCanasta => ingredientes.FindAll(i => !i.enLaMaloka && i.enOlla).Count;
 
     // Mensaje final que muestra la lista cuando el plato queda listo (lo pone OllaSopa)
     [System.NonSerialized] public string mensajeFinal;
@@ -162,16 +171,17 @@ public class ListaIngredientes : MonoBehaviour
         }
 
         int total = ingredientes.Count;
+        int paraCanasta = ParaCanasta;
         if (!string.IsNullOrEmpty(mensajeFinal))
             textoProgreso.text = mensajeFinal;
         else if (enOlla == total)
             textoProgreso.text = "Todo está en la olla: mezcla con la cuchara.";
         else if (enOlla > 0)
             textoProgreso.text = $"En la olla: {enOlla} de {total}   ·   En la canasta: {guardados}";
-        else if (guardados == total)
+        else if (guardados == paraCanasta)
             textoProgreso.text = mensajeTodoRecogido;
         else
-            textoProgreso.text = $"En la canasta: {guardados} de {total}";
+            textoProgreso.text = $"En la canasta: {guardados} de {paraCanasta}";
     }
 
     // Una columna por grupo, en el orden en que aparecen en la lista

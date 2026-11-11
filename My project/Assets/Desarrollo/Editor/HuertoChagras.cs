@@ -15,11 +15,12 @@ using UnityEngine.Rendering;
 //      (Mesh LOD), en Assets/Desarrollo/Modelos/Huerto. Prefabs en Assets/Desarrollo/Prefabs/Huerto.
 //   2. Se siembran en surcos dentro de las paredes "Límite" de cada chagra, dejando libre la llegada
 //      del muelle, el canasto, las gallinas y los ingredientes, y sin meterse a la orilla del río.
-//      Raíz "Huerto" dentro de "Chagra 1" (maíz y maní) y "Chagra 2" (yuca).
-//   3. A los ingredientes que se recogen (cubos grises) se les pone el modelo de diseño: la mazorca
-//      al Maíz y la raíz de yuca a la Yuca. El agarre y los encajes no cambian: el cubo se esconde y su
-//      collider toma el tamaño del modelo. Maní y Sacha culantro siguen como cubos porque diseño los
-//      entregó en .blend (Unity solo los abre con Blender instalado).
+//      Raíz "Huerto" dentro de "Chagra 1" (maíz y maní) y "Chagra 2" (yuca y sacha culantro).
+//   3. A los ingredientes que se recogen (cubos grises) se les pone el modelo de diseño: mazorca, vaina
+//      de maní (mani_con_raiz), raíz de yuca y matita de sacha culantro. El agarre y los encajes no
+//      cambian: el cubo se esconde y su collider toma el tamaño del modelo.
+// El maní y el sacha culantro de diseño son .blend: el paso 1 necesita Blender instalado en el PC que lo
+// ejecuta. Los pasos 2 y 3, y la escena, usan las mallas ya guardadas en Desarrollo (no necesitan Blender).
 // Volver a ejecutar cualquiera de los pasos los rehace igual (semilla fija).
 public static class HuertoChagras
 {
@@ -33,16 +34,26 @@ public static class HuertoChagras
     const string MatHojasMaiz = "Assets/_Main/Scenes/Terreno/MODELOS/maiz/New Material 1.mat";
     const string MatGranosMaiz = "Assets/_Main/Scenes/Terreno/MODELOS/maiz/New Material 2.mat";
     const string MatYuca = "Assets/_Main/Scenes/Terreno/MODELOS/YUCA/YUCA.mat";
+    // Estos dos son .blend: para el paso 1 hace falta Blender instalado en el PC (Unity lo usa para
+    // importarlos). Las mallas que salen se guardan en Desarrollo, así que el resto no lo necesita.
+    const string BlendMani = "Assets/_Main/Scenes/Terreno/MODELOS/MANÍ/mani_con_raiz.blend";
+    const string BlendSacha = "Assets/_Main/Scenes/Terreno/MODELOS/sachaculantro/sachaculantro.blend";
+    const string MatMani = "Assets/_Main/Scenes/Terreno/MODELOS/MANÍ/MANI_RAIZ.mat";
+    const string MatSachaHoja1 = "Assets/_Main/Scenes/Terreno/MODELOS/sachaculantro/New Material 1.mat"; // en "Cube"
+    const string MatSachaHoja2 = "Assets/_Main/Scenes/Terreno/MODELOS/sachaculantro/New Material.mat";   // en "Cube.001"
 
     // Tamaño real respecto a diseño: maíz 8 m -> 2,4 m (mazorcas de ~0,33 m entre 1 y 2,4 m de alto),
     // maní 4 m -> 1 m (más bajo se pierde entre el pasto), yuca 4,4 m -> 1,6 m (raíces de ~0,27 m).
     const float EscalaMaiz = 0.3f;
     const float EscalaMani = 0.25f;
     const float EscalaYuca = 0.36f;
+    const float EscalaSacha = 0.18f;  // cada matita de diseño mide ~2,1 m -> ~0,38 m
 
-    // Largo de los ingredientes que se agarran (los cubos medían 0,2 m y 0,29 m)
+    // Largo de los ingredientes que se agarran (los cubos medían 0,06 a 0,29 m)
     const float LargoMazorcaIngrediente = 0.22f;
     const float LargoYucaIngrediente = 0.28f;
+    const float LargoManiIngrediente = 0.2f;
+    const float LargoSachaIngrediente = 0.25f;
 
     // Triángulos máximos por pieza (se usa el primer nivel simplificado que quepa)
     const int TrisPlanta = 1500;        // mata del maíz y la yuca (original 5.828)
@@ -51,6 +62,8 @@ public static class HuertoChagras
     const int TrisHojasCampo = 900;     // hojas de las mazorcas (original 46.080)
     const int TrisGranosMano = 8000;    // mazorca que se agarra
     const int TrisHojasMano = 6500;
+    const int TrisVainaCampo = 200;     // vainas de maní entre las hojas (original 6.016)
+    const int TrisVainaMano = 2000;     // vaina que se agarra
 
     const int Semilla = 1111;
 
@@ -81,6 +94,36 @@ public static class HuertoChagras
         new Pieza(new Vector3(0.18803f, 7.48907f, -0.1861f), new Quaternion(-0.78038f, 0.00705f, -0.0869f, 0.61919f), new Vector3(23.07739f, 23.07739f, 53.13039f)),
     };
     static readonly Pieza MataMani = new Pieza(new Vector3(-0.28358f, 2.87834f, -0.36628f), new Quaternion(-0.66909f, 0.22874f, 0.22874f, 0.66909f), new Vector3(7.23671f, 7.33817f, 9.10652f));
+    // Las 3 vainas (mani_con_raiz) que diseño pone entre las hojas de cada mata de maní
+    static readonly Pieza[] VainasMani =
+    {
+        new Pieza(new Vector3(-0.06256f, 1.70345f, -0.19466f), new Quaternion(-0.58881f, -0.27371f, -0.39154f, 0.65198f), new Vector3(0.19448f, 0.19448f, 0.55769f)),
+        new Pieza(new Vector3(-0.26233f, 1.70345f, 0.18456f), new Quaternion(-0.68103f, 0.31506f, 0.19027f, 0.63304f), new Vector3(0.19448f, 0.19448f, 0.55769f)),
+        new Pieza(new Vector3(-0.34097f, 0.93127f, -0.05499f), new Quaternion(-0.70394f, 0.06685f, -0.06685f, 0.70394f), new Vector3(0.19448f, 0.19448f, 0.55769f)),
+    };
+    // Matitas de sacha culantro del cantero de diseño: cada una son dos hojas cruzadas ("Cube" y "Cube.001").
+    // Se toman tres con giros distintos; cada una se centra en su propia base al armar la malla.
+    static readonly Pieza[,] MatitasSacha =
+    {
+        {
+            new Pieza(new Vector3(-0.22202f, 0.11794f, -3.08716f), new Quaternion(-0.71604f, -0.01959f, 0.02011f, 0.69749f), new Vector3(0.1706f, 0.19008f, 0.07923f)),
+            new Pieza(new Vector3(-0.25128f, 0.11629f, -3.08713f), new Quaternion(0.51395f, -0.49896f, -0.51339f, -0.47258f), new Vector3(0.1706f, 0.19008f, 0.07923f)),
+        },
+        {
+            new Pieza(new Vector3(-0.16336f, 0.15532f, -1.78865f), new Quaternion(-0.43098f, 0.57215f, 0.58005f, 0.38787f), new Vector3(0.1706f, 0.19008f, 0.07923f)),
+            new Pieza(new Vector3(-0.15375f, 0.15659f, -1.761f), new Quaternion(0.10872f, 0.70801f, 0.68266f, -0.14447f), new Vector3(0.1706f, 0.19008f, 0.07923f)),
+        },
+        {
+            new Pieza(new Vector3(-1.71832f, 0.94458f, 3.0394f), new Quaternion(-0.40624f, 0.58446f, 0.56867f, 0.41229f), new Vector3(0.1706f, 0.19008f, 0.07923f)),
+            new Pieza(new Vector3(-1.70865f, 0.94476f, 3.06705f), new Quaternion(0.1348f, 0.6989f, 0.6922f, -0.11928f), new Vector3(0.1706f, 0.19008f, 0.07923f)),
+        },
+    };
+    static readonly (Vector3 pos, float giro, float escala)[] GrupoSacha =
+    {
+        (new Vector3(-0.12f, 0f, -0.1f), 0f, 1f),
+        (new Vector3(0.16f, 0f, -0.02f), 140f, 0.9f),
+        (new Vector3(-0.03f, 0f, 0.17f), 255f, 1.05f),
+    };
     static readonly Pieza MataYuca = new Pieza(new Vector3(-0.50057f, 3.12229f, -0.04385f), new Quaternion(-0.52136f, 0.47769f, 0.47769f, 0.52136f), new Vector3(7.85007f, 7.96013f, 9.87835f));
     static readonly Pieza[] RaicesYuca =
     {
@@ -120,7 +163,10 @@ public static class HuertoChagras
     // Yuca en la mitad norte; la mitad sur queda libre para el sacha culantro.
     const float YucaA0 = 4.5f, YucaB0 = 2.2f, YucaPaso = 1.6f;
     const int YucaFilasA = 9, YucaFilasB = 9;
-    const float AlturaMinimaChagra2 = 12f;  // aleja la yuca del filo del barranco
+    // Sacha culantro en la mitad sur, en surcos de grupos pequeños, sin tocar la bajada ni los ingredientes.
+    const float SachaA0 = -16f, SachaB0 = 2.2f, SachaPaso = 1.2f;
+    const int SachaFilasA = 10, SachaFilasB = 9;
+    const float AlturaMinimaChagra2 = 12f;  // aleja los cultivos del filo del barranco
 
     static readonly Vector2 BajadaMuelle2 = new Vector2(378.1f, 195.4f);
     static readonly Vector2 BajadaMuelle3 = new Vector2(425.95f, 297.3f);
@@ -129,6 +175,7 @@ public static class HuertoChagras
     static readonly Vector2 SitioMaiz = new Vector2(370.4f, 202.6f);
     static readonly Vector2 SitioMani = new Vector2(367.4f, 197.0f);
     static readonly Vector2 SitioYuca = Chagra2Pared + Chagra2EjeA * 3.0f + Chagra2EjeB * 12f;
+    static readonly Vector2 SitioSacha = Chagra2Pared + Chagra2EjeA * -4.0f + Chagra2EjeB * 9f;
 
     // ---------------------------------------------------------------------------------------------
 
@@ -150,6 +197,9 @@ public static class HuertoChagras
         Mesh granos = CargarMalla(FbxMaiz, "Sphere.001");
         Mesh hojas = CargarMalla(FbxMaiz, "BézierCurve.001");
         Mesh raiz = CargarMalla(ObjYuca, "default");
+        Mesh vaina = CargarMalla(BlendMani, "Sphere");
+        Mesh hojaSacha1 = CargarMalla(BlendSacha, "Cube");
+        Mesh hojaSacha2 = CargarMalla(BlendSacha, "Cube.001");
 
         Mesh plantaCampo = Reducir(planta, TrisPlanta);
         Mesh plantaMani = Reducir(planta, TrisPlantaMani);
@@ -157,11 +207,29 @@ public static class HuertoChagras
         Mesh hojasCampo = Reducir(hojas, TrisHojasCampo);
         Mesh granosMano = Reducir(granos, TrisGranosMano);
         Mesh hojasMano = Reducir(hojas, TrisHojasMano);
+        Mesh vainaCampo = Reducir(vaina, TrisVainaCampo);
+        Mesh vainaMano = Reducir(vaina, TrisVainaMano);
 
         Material mPlanta = Cargar<Material>(MatPlanta);
         Material mHojas = Cargar<Material>(MatHojasMaiz);
         Material mGranos = Cargar<Material>(MatGranosMaiz);
         Material mYuca = Cargar<Material>(MatYuca);
+        Material mMani = Cargar<Material>(MatMani);
+        Material mSacha1 = Cargar<Material>(MatSachaHoja1);
+        Material mSacha2 = Cargar<Material>(MatSachaHoja2);
+
+        // Cada matita de sacha culantro, centrada en su base (en unidades de diseño)
+        var matitas = new List<Parte>[MatitasSacha.GetLength(0)];
+        for (int i = 0; i < matitas.Length; i++)
+        {
+            var hojasMatita = new List<Parte>
+            {
+                new Parte(hojaSacha1, MatitasSacha[i, 0].Matriz, 0),
+                new Parte(hojaSacha2, MatitasSacha[i, 1].Matriz, 1),
+            };
+            Matrix4x4 centrar = Matrix4x4.Translate(-Base(hojasMatita));
+            matitas[i] = hojasMatita.ConvertAll(p => new Parte(p.malla, centrar * p.matriz, p.submalla));
+        }
 
         // Maíz: submallas mata / hojas de mazorca / granos
         Matrix4x4 eMaiz = Matrix4x4.Scale(Vector3.one * EscalaMaiz);
@@ -178,14 +246,33 @@ public static class HuertoChagras
             GuardarPrefab(nombre, malla, new[] { mPlanta, mHojas, mGranos });
         }
 
-        // Maní: grupo de 3 matas pequeñas
+        // Maní: grupo de 3 matas pequeñas, cada una con una de las vainas de diseño entre las hojas
         {
             var partes = new List<Parte>();
-            foreach (var m in GrupoMani)
-                partes.Add(new Parte(plantaMani, Matrix4x4.TRS(m.pos, Quaternion.Euler(0f, m.giro, 0f), Vector3.one * m.escala) * Matrix4x4.Scale(Vector3.one * EscalaMani) * MataMani.Matriz, 0));
+            for (int i = 0; i < GrupoMani.Length; i++)
+            {
+                var m = GrupoMani[i];
+                Matrix4x4 lugar = Matrix4x4.TRS(m.pos, Quaternion.Euler(0f, m.giro, 0f), Vector3.one * m.escala) * Matrix4x4.Scale(Vector3.one * EscalaMani);
+                partes.Add(new Parte(plantaMani, lugar * MataMani.Matriz, 0));
+                partes.Add(new Parte(vainaCampo, lugar * VainasMani[i % VainasMani.Length].Matriz, 1));
+            }
             const string nombre = "Maní (grupo de matas)";
-            Mesh malla = GuardarMalla(Combinar(nombre, partes, 1, true), nombre);
-            GuardarPrefab(nombre, malla, new[] { mPlanta });
+            Mesh malla = GuardarMalla(Combinar(nombre, partes, 2, true), nombre);
+            GuardarPrefab(nombre, malla, new[] { mPlanta, mMani });
+        }
+
+        // Sacha culantro: grupo de 3 matitas
+        {
+            var partes = new List<Parte>();
+            for (int i = 0; i < GrupoSacha.Length; i++)
+            {
+                var m = GrupoSacha[i];
+                Matrix4x4 lugar = Matrix4x4.TRS(m.pos, Quaternion.Euler(0f, m.giro, 0f), Vector3.one * m.escala) * Matrix4x4.Scale(Vector3.one * EscalaSacha);
+                foreach (Parte p in matitas[i % matitas.Length]) partes.Add(new Parte(p.malla, lugar * p.matriz, p.submalla));
+            }
+            const string nombre = "Sacha culantro (grupo de matas)";
+            Mesh malla = GuardarMalla(Combinar(nombre, partes, 2, true), nombre);
+            GuardarPrefab(nombre, malla, new[] { mSacha1, mSacha2 });
         }
 
         // Yuca: mata y dos raíces asomadas
@@ -214,9 +301,20 @@ public static class HuertoChagras
             var partes = new List<Parte> { new Parte(raiz, Matrix4x4.Rotate(Quaternion.Euler(90f, 0f, 0f)), 0) };
             GuardarMalla(Ajustar(Combinar("Yuca (ingrediente)", partes, 1, false), LargoYucaIngrediente), "Yuca (ingrediente)");
         }
+        {
+            // La vaina ya es larga en Z
+            var partes = new List<Parte> { new Parte(vainaMano, Matrix4x4.identity, 0) };
+            GuardarMalla(Ajustar(Combinar("Maní (ingrediente)", partes, 1, false), LargoManiIngrediente), "Maní (ingrediente)");
+        }
+        {
+            // Una matita de sacha culantro cosechada: acostada, con las hojas hacia Z
+            Matrix4x4 acostar = Matrix4x4.Rotate(Quaternion.Euler(90f, 0f, 0f));
+            var partes = matitas[0].ConvertAll(p => new Parte(p.malla, acostar * p.matriz, p.submalla));
+            GuardarMalla(Ajustar(Combinar("Sacha culantro (ingrediente)", partes, 2, false), LargoSachaIngrediente), "Sacha culantro (ingrediente)");
+        }
 
-        foreach (Mesh m in new[] { plantaCampo, plantaMani, granosCampo, hojasCampo, granosMano, hojasMano })
-            if (m != planta && m != granos && m != hojas) Object.DestroyImmediate(m);
+        foreach (Mesh m in new[] { plantaCampo, plantaMani, granosCampo, hojasCampo, granosMano, hojasMano, vainaCampo, vainaMano })
+            if (m != planta && m != granos && m != hojas && m != vaina) Object.DestroyImmediate(m);
 
         AssetDatabase.SaveAssets();
         Debug.Log("Huerto: mallas y prefabs generados en " + CarpetaMallas + " y " + CarpetaPrefabs);
@@ -238,7 +336,8 @@ public static class HuertoChagras
         GameObject maiz2 = Cargar<GameObject>(CarpetaPrefabs + "/Maíz (2 mazorcas).prefab");
         GameObject mani = Cargar<GameObject>(CarpetaPrefabs + "/Maní (grupo de matas).prefab");
         GameObject yuca = Cargar<GameObject>(CarpetaPrefabs + "/Yuca (mata).prefab");
-        if (!maiz4 || !maiz2 || !mani || !yuca)
+        GameObject sacha = Cargar<GameObject>(CarpetaPrefabs + "/Sacha culantro (grupo de matas).prefab");
+        if (!maiz4 || !maiz2 || !mani || !yuca || !sacha)
         {
             Debug.LogError("Huerto: faltan los prefabs; ejecuta antes '1. Generar mallas y prefabs'.");
             return;
@@ -281,9 +380,20 @@ public static class HuertoChagras
                 if (Sembrar(terreno, campoYuca, yuca, p, azar, 0.85f, 1.15f, 0.4f, AlturaMinimaChagra2, BajadaMuelle3, 5f)) total++;
             }
         }
+        // Azar aparte para que el sacha culantro no cambie lo que ya estaba sembrado
+        var azarSacha = new System.Random(Semilla + 1);
+        Transform campoSacha = NuevoHijo(huerto2, "Sacha culantro");
+        for (int i = 0; i < SachaFilasA; i++)
+        {
+            for (int j = 0; j < SachaFilasB; j++)
+            {
+                Vector2 p = Chagra2Pared + Chagra2EjeA * (SachaA0 + i * SachaPaso) + Chagra2EjeB * (SachaB0 + j * SachaPaso) + Temblor(azarSacha, 0.2f);
+                if (Sembrar(terreno, campoSacha, sacha, p, azarSacha, 0.85f, 1.15f, 0.25f, AlturaMinimaChagra2, BajadaMuelle3, 5f)) total++;
+            }
+        }
 
         EditorSceneManager.MarkSceneDirty(chagra1.gameObject.scene);
-        Debug.Log($"Huerto: {total} matas sembradas ({campoMaiz.childCount} maíz, {campoMani.childCount} grupos de maní, {campoYuca.childCount} yuca).");
+        Debug.Log($"Huerto: {total} sembrados ({campoMaiz.childCount} maíz, {campoMani.childCount} grupos de maní, {campoYuca.childCount} yuca, {campoSacha.childCount} grupos de sacha culantro).");
     }
 
     [MenuItem("Desarrollo/Escenario/Huerto de las chagras/3. Poner modelos a los ingredientes")]
@@ -292,7 +402,9 @@ public static class HuertoChagras
         Terrain terreno = Object.FindFirstObjectByType<Terrain>();
         Mesh mazorca = Cargar<Mesh>(CarpetaMallas + "/Mazorca (ingrediente).asset");
         Mesh raiz = Cargar<Mesh>(CarpetaMallas + "/Yuca (ingrediente).asset");
-        if (!terreno || !mazorca || !raiz)
+        Mesh vaina = Cargar<Mesh>(CarpetaMallas + "/Maní (ingrediente).asset");
+        Mesh matita = Cargar<Mesh>(CarpetaMallas + "/Sacha culantro (ingrediente).asset");
+        if (!terreno || !mazorca || !raiz || !vaina || !matita)
         {
             Debug.LogError("Huerto: abre TERRENO FINAL y ejecuta antes '1. Generar mallas y prefabs'.");
             return;
@@ -301,18 +413,22 @@ public static class HuertoChagras
         Material mHojas = Cargar<Material>(MatHojasMaiz);
         Material mGranos = Cargar<Material>(MatGranosMaiz);
         Material mYuca = Cargar<Material>(MatYuca);
+        Material mMani = Cargar<Material>(MatMani);
+        Material mSacha1 = Cargar<Material>(MatSachaHoja1);
+        Material mSacha2 = Cargar<Material>(MatSachaHoja2);
 
         Transform maiz = BuscarIngrediente("Chagra 1", "Maíz_Cubo");
         Transform mani = BuscarIngrediente("Chagra 1", "Maní_Cubo");
         Transform yuca = BuscarIngrediente("Chagra 2", "Yuca_Cubo");
+        Transform sacha = BuscarIngrediente("Chagra 2", "SachaCulantro_Cubo");
 
         if (maiz) { PonerModelo(maiz, mazorca, new[] { mHojas, mGranos }); Ubicar(terreno, maiz, SitioMaiz, 75f); }
+        if (mani) { PonerModelo(mani, vaina, new[] { mMani }); Ubicar(terreno, mani, SitioMani, 20f); }
         if (yuca) { PonerModelo(yuca, raiz, new[] { mYuca }); Ubicar(terreno, yuca, SitioYuca, 30f); }
-        // El maní sigue como cubo (modelo en .blend); solo se pone junto a su cultivo
-        if (mani) Ubicar(terreno, mani, SitioMani, 20f);
+        if (sacha) { PonerModelo(sacha, matita, new[] { mSacha1, mSacha2 }); Ubicar(terreno, sacha, SitioSacha, 200f); }
 
         if (maiz) EditorSceneManager.MarkSceneDirty(maiz.gameObject.scene);
-        Debug.Log("Huerto: ingredientes con modelo (maíz " + (maiz ? "sí" : "NO ENCONTRADO") + ", yuca " + (yuca ? "sí" : "NO ENCONTRADO") + ").");
+        Debug.Log($"Huerto: ingredientes con modelo (maíz {Encontrado(maiz)}, maní {Encontrado(mani)}, yuca {Encontrado(yuca)}, sacha culantro {Encontrado(sacha)}).");
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -348,10 +464,10 @@ public static class HuertoChagras
         return true;
     }
 
-    static float Altura(Terrain terreno, Vector2 p) =>
+    internal static float Altura(Terrain terreno, Vector2 p) =>
         terreno.SampleHeight(new Vector3(p.x, 0f, p.y)) + terreno.transform.position.y;
 
-    static Transform BuscarRaiz(string nombre)
+    internal static Transform BuscarRaiz(string nombre)
     {
         var escena = EditorSceneManager.GetActiveScene();
         foreach (GameObject g in escena.GetRootGameObjects())
@@ -395,14 +511,16 @@ public static class HuertoChagras
         return null;
     }
 
+    static string Encontrado(Transform t) => t ? "sí" : "NO ENCONTRADO";
+
     // Cuerpo del ingrediente: el hijo con el Rigidbody y el Grabbable ("[BuildingBlock] Cube")
-    static Transform Cuerpo(Transform ingrediente)
+    internal static Transform Cuerpo(Transform ingrediente)
     {
         Rigidbody rb = ingrediente.GetComponentInChildren<Rigidbody>(true);
         return rb ? rb.transform : null;
     }
 
-    static void PonerModelo(Transform ingrediente, Mesh malla, Material[] materiales)
+    internal static void PonerModelo(Transform ingrediente, Mesh malla, Material[] materiales)
     {
         Transform cuerpo = Cuerpo(ingrediente);
         Transform cubo = cuerpo ? cuerpo.Find("Cube") : null;
@@ -465,14 +583,14 @@ public static class HuertoChagras
     // ---------------------------------------------------------------------------------------------
     // Mallas
 
-    struct Parte
+    internal struct Parte
     {
         public Mesh malla; public Matrix4x4 matriz; public int submalla;
         public Parte(Mesh malla, Matrix4x4 matriz, int submalla) { this.malla = malla; this.matriz = matriz; this.submalla = submalla; }
     }
 
     // Junta las partes en una malla con una submalla por material; opcionalmente con niveles de detalle
-    static Mesh Combinar(string nombre, List<Parte> partes, int submallas, bool conNiveles)
+    internal static Mesh Combinar(string nombre, List<Parte> partes, int submallas, bool conNiveles)
     {
         var grupos = new Mesh[submallas];
         int vertices = 0;
@@ -501,8 +619,27 @@ public static class HuertoChagras
         return final;
     }
 
+    // Punto de apoyo de un conjunto de partes: centro en X/Z y lo más bajo en Y
+    static Vector3 Base(List<Parte> partes)
+    {
+        bool primero = true;
+        var b = new Bounds();
+        var v = new List<Vector3>();
+        foreach (Parte p in partes)
+        {
+            p.malla.GetVertices(v);
+            foreach (Vector3 x in v)
+            {
+                Vector3 w = p.matriz.MultiplyPoint3x4(x);
+                if (primero) { b = new Bounds(w, Vector3.zero); primero = false; }
+                else b.Encapsulate(w);
+            }
+        }
+        return new Vector3(b.center.x, b.min.y, b.center.z);
+    }
+
     // Centra la malla en el origen y la escala para que su lado Z mida "largo"
-    static Mesh Ajustar(Mesh malla, float largo)
+    internal static Mesh Ajustar(Mesh malla, float largo)
     {
         Bounds b = malla.bounds;
         float k = largo / b.size.z;
@@ -515,7 +652,7 @@ public static class HuertoChagras
     }
 
     // Copia de la malla con el primer nivel simplificado que no pase de maxTris triángulos
-    static Mesh Reducir(Mesh fuente, int maxTris)
+    internal static Mesh Reducir(Mesh fuente, int maxTris)
     {
         if (fuente.triangles.Length / 3 <= maxTris) return fuente;
 
@@ -574,9 +711,11 @@ public static class HuertoChagras
         return salida;
     }
 
-    static Mesh GuardarMalla(Mesh malla, string nombre)
+    static Mesh GuardarMalla(Mesh malla, string nombre) => GuardarMalla(malla, nombre, CarpetaMallas);
+
+    internal static Mesh GuardarMalla(Mesh malla, string nombre, string carpeta)
     {
-        string ruta = CarpetaMallas + "/" + nombre + ".asset";
+        string ruta = carpeta + "/" + nombre + ".asset";
         malla.name = nombre;
         var existente = AssetDatabase.LoadAssetAtPath<Mesh>(ruta);
         if (existente)
@@ -604,21 +743,21 @@ public static class HuertoChagras
         Object.DestroyImmediate(go);
     }
 
-    static Mesh CargarMalla(string ruta, string nombre)
+    internal static Mesh CargarMalla(string ruta, string nombre)
     {
         foreach (Object o in AssetDatabase.LoadAllAssetsAtPath(ruta))
             if (o is Mesh m && m.name == nombre) return m;
         throw new System.Exception("Huerto: no encuentro la malla " + nombre + " en " + ruta);
     }
 
-    static T Cargar<T>(string ruta) where T : Object
+    internal static T Cargar<T>(string ruta) where T : Object
     {
         var a = AssetDatabase.LoadAssetAtPath<T>(ruta);
         if (!a) Debug.LogError("Huerto: no encuentro " + ruta);
         return a;
     }
 
-    static void CrearCarpeta(string ruta)
+    internal static void CrearCarpeta(string ruta)
     {
         if (AssetDatabase.IsValidFolder(ruta)) return;
         int barra = ruta.LastIndexOf('/');
