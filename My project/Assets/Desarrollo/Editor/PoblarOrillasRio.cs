@@ -6,7 +6,8 @@ using UnityEngine;
 using UnityEngine.Rendering;
 
 // Decora las orillas del río de TERRENO FINAL con assets de diseño:
-//   - palmeras: copias de "chambira (1)" que ya está en la escena (FBX _Main/Scenes/Terreno/MODELOS/chambira (1).fbx),
+//   - palmeras: copias de "chambira (1)" que ya está en la escena (desde 2026-11-11 es _Main/Scenes/Terreno/MODELOS/chambira 1/chambira.obj;
+//     diseño borró el FBX viejo "chambira (1).fbx"),
 //   - arbolitos y pasto: las imágenes _Main/Scenes/Terreno/Pasto/arbolito.png y Pastito.png en un plano
 //     que gira hacia el jugador (VegetacionMirarCamara), como el pasto que diseño pinta en el terreno.
 // Todo queda bajo la raíz "VEGETACIÓN RÍO". Volver a ejecutarlo borra esa raíz y la genera igual
@@ -230,6 +231,109 @@ public static class PoblarOrillasRio
         EditorSceneManager.MarkSceneDirty(escena);
         string resumen = $"Orillas del río: {palmeras.childCount} palmeras, {arbolitos.childCount} arbolitos, {pasto.childCount} matas de pasto, " +
                          $"{arbustos.childCount} arbustos ({enBosque} árboles tierra adentro).";
+        Debug.Log(resumen);
+        return resumen;
+    }
+
+    // Árboles 3D de diseño (MODELOS/ARBOL/Arbol.obj, 2.564 triángulos, con textura) tierra adentro.
+    // Pocos y repartidos en manchas para que el APK en las Quest los aguante. Quedan en "VEGETACIÓN RÍO/Árboles 3D";
+    // volver a ejecutarlo borra solo ese grupo y lo genera igual (semilla fija). No toca palmeras, arbolitos ni pasto.
+    const string ArbolModelo = "Assets/_Main/Scenes/Terreno/MODELOS/ARBOL/Arbol.obj";
+    const string ArbolMaterial = "Assets/_Main/Scenes/Terreno/MODELOS/ARBOL/New Material.mat"; // el que usa diseño (con textura)
+    const string NombreArboles3D = "Árboles 3D";
+    const int MaxArboles3D = 70;
+    const float CeldaArboles3D = 14f;          // un candidato por celda
+    const float SeparacionArboles3D = 13f;     // entre árboles 3D
+    const float SeparacionArbol3DOtros = 6f;   // con palmeras y arbolitos
+    const float DistArboles3DMin = 22f;        // desde el centro del río
+    const float DistArboles3DMax = 75f;
+    const float EscalaArbolMin = 1.8f, EscalaArbolMax = 3.2f; // el modelo mide ~6,3 m: árboles de 11 a 20 m
+
+    [MenuItem("Desarrollo/Escenario/Poner árboles 3D de diseño")]
+    public static string PonerArboles3D()
+    {
+        var escena = EditorSceneManager.GetActiveScene();
+        var terreno = Terrain.activeTerrain;
+        var raiz = GameObject.Find(NombreRaiz);
+        var modelo = AssetDatabase.LoadAssetAtPath<GameObject>(ArbolModelo);
+        var mat = AssetDatabase.LoadAssetAtPath<Material>(ArbolMaterial);
+        if (terreno == null || raiz == null) return Error("Abre TERRENO FINAL y genera primero \"" + NombreRaiz + "\".");
+        if (modelo == null || mat == null) return Error("No encuentro " + ArbolModelo + " o " + ArbolMaterial + ".");
+
+        var anterior = raiz.transform.Find(NombreArboles3D);
+        if (anterior != null) Undo.DestroyObjectImmediate(anterior.gameObject);
+        var grupo = new GameObject(NombreArboles3D).transform;
+        Undo.RegisterCreatedObjectUndo(grupo.gameObject, "Poner árboles 3D");
+        grupo.SetParent(raiz.transform, false);
+
+        var otros = new List<Vector3>();
+        foreach (var nombre in new[] { "Palmeras", "Arbolitos" })
+        {
+            var g = raiz.transform.Find(nombre);
+            if (g != null) foreach (Transform t in g) otros.Add(t.position);
+        }
+        foreach (var g in escena.GetRootGameObjects())
+            if (g.name.StartsWith("chambira")) otros.Add(g.transform.position);
+
+        var zonas = ZonasDespejadas();
+        var cauce = Cauce();
+        var rnd = new System.Random(Semilla + 3);
+
+        // Candidatos en toda la franja; luego se eligen al azar para que queden repartidos por todo el recorrido.
+        var tp = terreno.transform.position; var ts = terreno.terrainData.size;
+        float minX = float.MaxValue, minZ = float.MaxValue, maxX = float.MinValue, maxZ = float.MinValue;
+        foreach (var c in cauce) { minX = Mathf.Min(minX, c.x); maxX = Mathf.Max(maxX, c.x); minZ = Mathf.Min(minZ, c.y); maxZ = Mathf.Max(maxZ, c.y); }
+        minX = Mathf.Max(minX - DistArboles3DMax, tp.x + 2f); maxX = Mathf.Min(maxX + DistArboles3DMax, tp.x + ts.x - 2f);
+        minZ = Mathf.Max(minZ - DistArboles3DMax, tp.z + 2f); maxZ = Mathf.Min(maxZ + DistArboles3DMax, tp.z + ts.z - 2f);
+        var candidatos = new List<Vector2>();
+        for (float z = minZ; z < maxZ; z += CeldaArboles3D)
+            for (float x = minX; x < maxX; x += CeldaArboles3D)
+            {
+                var p = new Vector2(x + Rango(rnd, 0f, CeldaArboles3D), z + Rango(rnd, 0f, CeldaArboles3D));
+                float dRio = DistanciaAlCauce(p, cauce);
+                if (dRio < DistArboles3DMin || dRio > DistArboles3DMax) continue;
+                // Manchas distintas de las del bosque de arbolitos, para que se mezclen.
+                if (Mathf.PerlinNoise(p.x / TamanoManchasBosque + 77.1f, p.y / TamanoManchasBosque + 5.9f) < 0.4f) continue;
+                if (!Libre(p, zonas) || Pendiente(terreno, p) < 0.8f || terreno.SampleHeight(V3(p)) < AlturaBorde) continue;
+                candidatos.Add(p);
+            }
+        for (int i = candidatos.Count - 1; i > 0; i--)
+        {
+            int j = rnd.Next(i + 1);
+            (candidatos[i], candidatos[j]) = (candidatos[j], candidatos[i]);
+        }
+
+        var puestos = new List<Vector3>();
+        var mats = new Material[2];
+        foreach (var p in candidatos)
+        {
+            if (puestos.Count >= MaxArboles3D) break;
+            if (!Lejos(p, puestos, SeparacionArboles3D) || !Lejos(p, otros, SeparacionArbol3DOtros)) continue;
+            var pos = Suelo(terreno, p);
+            puestos.Add(pos);
+
+            float escala = Rango(rnd, EscalaArbolMin, EscalaArbolMax);
+            var arbol = (GameObject)PrefabUtility.InstantiatePrefab(modelo, grupo);
+            arbol.name = "Árbol " + puestos.Count;
+            arbol.transform.localScale = Vector3.one * escala;
+            var inclinacion = Quaternion.AngleAxis(Rango(rnd, 0f, 3f), Quaternion.Euler(0f, Rango(rnd, 0f, 360f), 0f) * Vector3.right);
+            // La base del modelo está en y=0; se hunde un poco para que las raíces entren en el suelo.
+            arbol.transform.SetPositionAndRotation(pos - Vector3.up * (0.15f * escala), inclinacion * Quaternion.Euler(0f, Rango(rnd, 0f, 360f), 0f));
+            foreach (var r in arbol.GetComponentsInChildren<MeshRenderer>())
+            {
+                if (mats.Length != r.sharedMaterials.Length) mats = new Material[r.sharedMaterials.Length];
+                for (int k = 0; k < mats.Length; k++) mats[k] = mat;
+                r.sharedMaterials = mats;
+                // Sin sombras propias: en las Quest cada árbol con sombra se dibuja dos veces.
+                r.shadowCastingMode = ShadowCastingMode.Off;
+                r.reflectionProbeUsage = ReflectionProbeUsage.Off;
+            }
+            foreach (var t in arbol.GetComponentsInChildren<Transform>())
+                GameObjectUtility.SetStaticEditorFlags(t.gameObject, StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccludeeStatic);
+        }
+
+        EditorSceneManager.MarkSceneDirty(escena);
+        string resumen = $"Árboles 3D: {puestos.Count} de {candidatos.Count} candidatos (~{puestos.Count * 2564 / 1000}k triángulos en total).";
         Debug.Log(resumen);
         return resumen;
     }
